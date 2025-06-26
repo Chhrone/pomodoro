@@ -971,22 +971,26 @@
 /* Dark theme adjustments for music controls */
 @media (prefers-color-scheme: dark) {
   .music-control-btn {
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1f2937;
+    color: #9ca3af;
+    border: 1px solid #374151;
   }
 
   .music-control-btn:hover {
-    background: rgba(0, 0, 0, 0.9);
-    color: var(--text-primary);
+    background: #374151;
+    color: #d1d5db;
   }
 
   .music-volume-control {
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1f2937;
+    border: 1px solid #374151;
   }
 
   .volume-slider {
-    background: rgba(255, 255, 255, 0.1);
+    background: #374151;
+  }
+
+  .volume-display {
+    color: #9ca3af;
   }
 }

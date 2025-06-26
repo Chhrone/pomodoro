@@ -366,7 +366,7 @@ export class SettingsModel {
     }
 
     // Apply theme
-    body.setAttribute('data-theme', appearance.theme)
+    body.setAttribute('data-theme', appearance.theme || 'light')
   }
 
   /**

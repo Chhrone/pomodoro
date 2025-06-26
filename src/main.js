@@ -27,6 +27,9 @@ class PomodoroApp {
   async init() {
     console.log('PomodoroApp: Initializing...')
 
+    // Set default light theme
+    document.body.setAttribute('data-theme', 'light')
+
     this.settingsPresenter.init()
     this.reportPresenter.init()
     this.timerPresenter.init()

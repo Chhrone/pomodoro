@@ -16,6 +16,7 @@ export class SettingsView {
       saveTimerBtn: null,
       
       // Appearance settings
+      themeMode: null,
       backgroundType: null,
       backgroundColor: null,
       gradientColor1: null,
@@ -48,6 +49,7 @@ export class SettingsView {
     this.elements.saveTimerBtn = document.getElementById('save-timer-settings')
     
     // Appearance settings
+    this.elements.themeMode = document.querySelectorAll('input[name="theme-mode"]')
     this.elements.backgroundType = document.getElementById('background-type')
     this.elements.backgroundColor = document.getElementById('background-color')
     this.elements.gradientColor1 = document.getElementById('gradient-color-1')
@@ -113,6 +115,16 @@ export class SettingsView {
     }
     
     // Appearance settings
+    if (this.elements.themeMode) {
+      this.elements.themeMode.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            this.callbacks.onAppearanceSettingChange?.('theme', e.target.value)
+          }
+        })
+      })
+    }
+
     if (this.elements.backgroundType) {
       this.elements.backgroundType.addEventListener('change', (e) => {
         this.updateBackgroundTypeUI(e.target.value)
@@ -259,11 +271,19 @@ export class SettingsView {
    * Update appearance settings display
    */
   updateAppearanceSettings(settings) {
+    // Update theme mode
+    if (this.elements.themeMode) {
+      const theme = settings.theme || 'light'
+      this.elements.themeMode.forEach(radio => {
+        radio.checked = radio.value === theme
+      })
+    }
+
     if (this.elements.backgroundType) {
       this.elements.backgroundType.value = settings.backgroundType
       this.updateBackgroundTypeUI(settings.backgroundType)
     }
-    
+
     if (this.elements.backgroundColor) {
       this.elements.backgroundColor.value = settings.backgroundColor
     }
