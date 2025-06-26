@@ -1,6 +1,5 @@
-/* Main CSS file - imports all component styles */
+/* Main stylesheet imports */
 
-/* Import CSS files in order of dependency */
 @import './styles/variables.css';
 @import './styles/base.css';
 @import './styles/components.css';
@@ -9,7 +8,7 @@
 @import './styles/task-list.css';
 @import './styles/responsive.css';
 
-/* SVG Gradient Definition for Progress Ring */
+/* Progress ring gradient */
 .progress-gradient {
   --gradient-start: var(--primary-color);
   --gradient-end: var(--secondary-color);

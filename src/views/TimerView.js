@@ -1,18 +1,12 @@
-/**
- * TimerView - Handles timer UI display and user interactions
- * Follows MVP pattern - only handles DOM manipulation and UI events
- */
+// Timer UI display and user interactions
 export class TimerView {
   constructor() {
-    // DOM elements
     this.elements = {
       container: null,
       sessionType: null,
       sessionCounter: null,
       timerMinutes: null,
       timerSeconds: null,
-      // progressRing: null, // Not used in current design
-      // sessionDots: null, // Not used in current design
       startPauseBtn: null,
       resetBtn: null,
       skipBtn: null,
@@ -21,21 +15,13 @@ export class TimerView {
       settingsBtn: null
     }
 
-    // Event callbacks (set by presenter)
     this.callbacks = {}
-
-    // Current session type for progress display
     this.currentSessionType = 'work'
 
     this.initializeElements()
     this.setupEventListeners()
   }
 
-
-  
-  /**
-   * Initialize DOM elements
-   */
   initializeElements() {
     console.log('TimerView: Initializing DOM elements...')
 
@@ -45,7 +31,6 @@ export class TimerView {
     this.elements.timerMinutes = document.getElementById('timer-minutes')
     this.elements.timerSeconds = document.getElementById('timer-seconds')
     this.elements.timerCircle = document.getElementById('timer-circle')
-    // this.elements.sessionDots = document.getElementById('session-dots') // Not used in current design
     this.elements.startPauseBtn = document.getElementById('start-pause-btn')
     this.elements.resetBtn = document.getElementById('reset-btn')
     this.elements.skipBtn = document.getElementById('skip-btn')

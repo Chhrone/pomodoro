@@ -1,48 +1,38 @@
-/**
- * TimerModel - Manages timer state, sessions, and tracking
- * Follows MVP pattern - no direct DOM interaction
- */
+// Timer state management and session tracking
 export class TimerModel {
   constructor() {
-    // Timer configuration (in minutes)
     this.config = {
       workDuration: 25,
       shortBreakDuration: 5,
       longBreakDuration: 15,
       sessionsUntilLongBreak: 3
     }
-    
-    // Timer state
+
     this.state = {
-      currentSession: 'work', // 'work', 'shortBreak', 'longBreak'
+      currentSession: 'work',
       sessionNumber: 1,
       completedSessions: 0,
-      totalFocusTime: 0, // in seconds (changed from minutes for precision)
+      totalFocusTime: 0, // seconds for precision
       isRunning: false,
       isPaused: false,
-      timeRemaining: this.config.workDuration * 60, // in seconds
+      timeRemaining: this.config.workDuration * 60,
       totalTime: this.config.workDuration * 60
     }
-    
-    // Break confirmation state
+
+    // Break confirmation handling
     this.breakState = {
       isWaitingForConfirmation: false,
       sessionEndTime: null,
       gracePeriodsUsed: 0,
-      bonusTime: 0 // in seconds
+      bonusTime: 0
     }
-    
-    // Timer interval
+
     this.interval = null
     this.graceTimeout = null
-    
-    // Event listeners
     this.listeners = {}
   }
-  
-  /**
-   * Event system for MVP communication
-   */
+
+  // Event system
   on(event, callback) {
     if (!this.listeners[event]) {
       this.listeners[event] = []
@@ -55,48 +45,33 @@ export class TimerModel {
       this.listeners[event].forEach(callback => callback(data))
     }
   }
-  
-  /**
-   * Get current timer state
-   */
+
   getState() {
     return { ...this.state }
   }
-  
-  /**
-   * Get break confirmation state
-   */
+
   getBreakState() {
     return { ...this.breakState }
   }
-  
-  /**
-   * Get timer configuration
-   */
+
   getConfig() {
     return { ...this.config }
   }
-  
-  /**
-   * Update timer configuration
-   */
+
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig }
-    
-    // Update current session time if not running
+
+    // Reset session time if timer is stopped
     if (!this.state.isRunning) {
       this.resetCurrentSession()
     }
-    
+
     this.emit('configUpdated', this.config)
   }
-  
-  /**
-   * Start the timer
-   */
+
   start() {
     if (this.state.isRunning) return
-    
+
     this.state.isRunning = true
     this.state.isPaused = false
     
@@ -110,58 +85,46 @@ export class TimerModel {
     })
   }
   
-  /**
-   * Pause the timer
-   */
   pause() {
     if (!this.state.isRunning || this.state.isPaused) return
-    
+
     this.state.isPaused = true
     clearInterval(this.interval)
     this.interval = null
-    
+
     this.emit('timerPaused', {
       timeRemaining: this.state.timeRemaining
     })
   }
-  
-  /**
-   * Resume the timer
-   */
+
   resume() {
     if (!this.state.isRunning || !this.state.isPaused) return
-    
+
     this.state.isPaused = false
-    
+
     this.interval = setInterval(() => {
       this.tick()
     }, 1000)
-    
+
     this.emit('timerResumed', {
       timeRemaining: this.state.timeRemaining
     })
   }
-  
-  /**
-   * Reset the current session
-   */
+
   reset() {
     this.stop()
     this.resetCurrentSession()
-    
+
     this.emit('timerReset', {
       sessionType: this.state.currentSession,
       timeRemaining: this.state.timeRemaining
     })
   }
   
-  /**
-   * Skip to next session
-   */
   skip() {
     this.stop()
 
-    // Increment completed sessions only for work sessions when skipped
+    // Count work sessions when skipped
     if (this.state.currentSession === 'work') {
       this.state.completedSessions++
     }
@@ -175,28 +138,22 @@ export class TimerModel {
       totalFocusTime: this.state.totalFocusTime
     })
   }
-  
-  /**
-   * Stop the timer
-   */
+
   stop() {
     this.state.isRunning = false
     this.state.isPaused = false
-    
+
     if (this.interval) {
       clearInterval(this.interval)
       this.interval = null
     }
-    
+
     if (this.graceTimeout) {
       clearTimeout(this.graceTimeout)
       this.graceTimeout = null
     }
   }
-  
-  /**
-   * Timer tick - called every second
-   */
+
   tick() {
     if (this.state.timeRemaining <= 0) {
       this.sessionComplete()
@@ -205,9 +162,9 @@ export class TimerModel {
 
     this.state.timeRemaining--
 
-    // Update total focus time in real-time for work sessions only
+    // Track focus time in real-time for work sessions
     if (this.state.currentSession === 'work') {
-      this.state.totalFocusTime += 1 // Add 1 second
+      this.state.totalFocusTime += 1
     }
 
     this.emit('timerTick', {

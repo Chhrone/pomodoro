@@ -1,4 +1,4 @@
-/* Base Styles and Reset */
+/* Base styles and reset */
 * {
   box-sizing: border-box;
 }
@@ -10,11 +10,11 @@ body {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: var(--text-primary);
   overflow-x: hidden;
-  /* Improve rendering quality */
+  /* Rendering optimizations */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  /* Prevent zoom issues */
+  /* Zoom prevention */
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -22,26 +22,25 @@ body {
 
 #app {
   min-height: 100vh;
-  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  min-height: 100dvh; /* Mobile viewport */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--spacing-lg);
-  /* Task list feature is under development - no padding needed */
-  /* padding-left: 420px; Make room for task list panel */
-  /* Prevent zoom issues */
+  /* TODO: Task list padding */
+  /* padding-left: 420px; */
   width: 100%;
   max-width: 100vw;
   box-sizing: border-box;
   /* transition: padding-left 0.3s ease-out; */
 }
 
-/* Task list related styles - Under development */
+/* TODO: Task list styles */
 /* #app.task-list-hidden {
-  padding-left: 70px; Reduced padding when task list is hidden
+  padding-left: 70px;
 } */
 
-/* Utility Classes */
+/* Utilities */
 .hidden {
   display: none !important;
 }

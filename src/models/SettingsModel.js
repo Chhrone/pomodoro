@@ -1,45 +1,36 @@
-/**
- * SettingsModel - Manages application settings and preferences
- * Follows MVP pattern - no direct DOM interaction
- */
+// Application settings and preferences management
 export class SettingsModel {
   constructor() {
-    // Default settings
     this.defaultSettings = {
-      // Timer settings
       timer: {
         workDuration: 25,
         shortBreakDuration: 5,
         longBreakDuration: 15,
         sessionsUntilLongBreak: 3
       },
-      
-      // Music settings
+
       music: {
         enabled: true,
-        volume: 50, // 0-100
+        volume: 50,
         currentTrack: null,
         autoPlay: true
       },
-      
-      // Appearance settings
+
       appearance: {
-        backgroundType: 'default', // 'default', 'gradient', 'solid', 'image'
+        backgroundType: 'default',
         backgroundColor: '#667eea',
         gradientColor1: '#667eea',
         gradientColor2: '#764ba2',
         backgroundImage: null,
-        theme: 'light' // 'light', 'dark'
+        theme: 'light'
       },
-      
-      // Notification settings
+
       notifications: {
         enabled: true,
         sound: true,
         desktop: false
       },
-      
-      // Advanced settings
+
       advanced: {
         gracePeriodsEnabled: true,
         bonusTimeEnabled: true,
@@ -58,39 +49,28 @@ export class SettingsModel {
     this.storageKey = 'pomodoro-settings'
   }
   
-  /**
-   * Event system for MVP communication
-   */
+  // Event system
   on(event, callback) {
     if (!this.listeners[event]) {
       this.listeners[event] = []
     }
     this.listeners[event].push(callback)
   }
-  
+
   emit(event, data) {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => callback(data))
     }
   }
-  
-  /**
-   * Get all settings
-   */
+
   getSettings() {
     return JSON.parse(JSON.stringify(this.settings))
   }
-  
-  /**
-   * Get specific setting category
-   */
+
   getCategory(category) {
     return JSON.parse(JSON.stringify(this.settings[category] || {}))
   }
-  
-  /**
-   * Get specific setting value
-   */
+
   getSetting(category, key) {
     return this.settings[category]?.[key]
   }

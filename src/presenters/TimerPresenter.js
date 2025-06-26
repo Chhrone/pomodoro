@@ -1,7 +1,4 @@
-/**
- * TimerPresenter - Connects TimerModel with TimerView and BreakConfirmationView
- * Follows MVP pattern - handles business logic and coordinates between model and views
- */
+// Timer coordination between model and views
 import { TimerModel } from '../models/TimerModel.js'
 import { TimerView } from '../views/TimerView.js'
 import { BreakConfirmationView } from '../views/BreakConfirmationView.js'
@@ -10,28 +7,23 @@ import { EventEmitter } from '../utils/EventEmitter.js'
 export class TimerPresenter extends EventEmitter {
   constructor() {
     super()
-    
-    // Initialize model and views
+
     this.model = new TimerModel()
     this.timerView = new TimerView()
     this.breakView = new BreakConfirmationView()
-    
-    // Current state
-    this.currentView = 'timer' // 'timer' or 'break'
-    
+
+    this.currentView = 'timer'
+
     this.setupModelListeners()
     this.setupViewCallbacks()
     this.initializeUI()
   }
-  
-  /**
-   * Initialize the presenter
-   */
+
   init() {
     console.log('TimerPresenter: Initializing...')
     this.updateUI()
 
-    // Initialize progress ring based on current session type
+    // Set initial progress ring state
     const state = this.model.getState()
     if (state.currentSession === 'work') {
       this.timerView.setProgressRingEmpty()
@@ -43,9 +35,6 @@ export class TimerPresenter extends EventEmitter {
     console.log('TimerPresenter: Initialized and timer view shown')
   }
 
-  /**
-   * Set settings presenter reference for listening to events
-   */
   setSettingsPresenter(settingsPresenter) {
     this.settingsPresenter = settingsPresenter
 
