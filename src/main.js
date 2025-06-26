@@ -3,6 +3,10 @@ import { TimerPresenter } from './presenters/TimerPresenter.js'
 import { MusicPresenter } from './presenters/MusicPresenter.js'
 import { SettingsPresenter } from './presenters/SettingsPresenter.js'
 import { ReportPresenter } from './presenters/ReportPresenter.js'
+// Task List feature is under development
+// import { TaskListPresenter } from './presenters/TaskListPresenter.js'
+// import { TaskModel } from './models/TaskModel.js'
+// import { TaskListView } from './views/TaskListView.js'
 
 // Initialize the application
 class PomodoroApp {
@@ -11,6 +15,11 @@ class PomodoroApp {
     this.musicPresenter = new MusicPresenter()
     this.settingsPresenter = new SettingsPresenter()
     this.reportPresenter = new ReportPresenter()
+
+    // Task list components - Under development
+    // this.taskModel = new TaskModel()
+    // this.taskListView = new TaskListView()
+    // this.taskListPresenter = new TaskListPresenter(this.taskModel, this.taskListView)
 
     // Connect presenters
     this.timerPresenter.setMusicPresenter(this.musicPresenter)
@@ -30,11 +39,27 @@ class PomodoroApp {
 
     // Set up presenter references
     this.timerPresenter.setSettingsPresenter(this.settingsPresenter)
+    this.timerPresenter.setReportPresenter(this.reportPresenter)
 
     // Connect presenters for communication
     this.connectPresenters()
 
+    // Initialize music tracks
+    this.initializeMusicTracks()
+
     console.log('PomodoroApp: Initialization complete!')
+    console.log('📝 Note: Task List feature is currently under development and will be available in a future update!')
+  }
+
+  /**
+   * Initialize music tracks
+   */
+  async initializeMusicTracks() {
+    try {
+      await this.musicPresenter.loadMusicTracks()
+    } catch (error) {
+      console.error('Failed to initialize music tracks:', error)
+    }
   }
 
   connectPresenters() {
@@ -71,6 +96,11 @@ class PomodoroApp {
       this.settingsPresenter.showSettings()
     })
 
+    // Timer <-> Task List connections - Under development
+    // this.timerPresenter.on('taskListRequested', () => {
+    //   this.taskListPresenter.showTaskList()
+    // })
+
     this.settingsPresenter.on('settingsChanged', (settings) => {
       // Update timer with new settings
       this.timerPresenter.updateSettings(settings)
@@ -99,6 +129,10 @@ class PomodoroApp {
             e.preventDefault()
             this.settingsPresenter.toggleSettings()
             break
+          case 'KeyT': // Ctrl/Cmd + T - Task List (Under Development)
+            e.preventDefault()
+            console.log('Task List feature is under development')
+            break
         }
       }
     })
@@ -114,7 +148,22 @@ class PomodoroApp {
         }
       }
     })
+
+    // Task list toggle button - Under development
+    // this.setupTaskListToggle()
   }
+
+  /**
+   * Setup task list toggle button - Under development
+   */
+  // setupTaskListToggle() {
+  //   const taskListBtn = document.getElementById('task-list-btn')
+  //   if (taskListBtn) {
+  //     taskListBtn.addEventListener('click', () => {
+  //       this.taskListPresenter.toggleTaskList()
+  //     })
+  //   }
+  // }
 
   /**
    * Get current application state
@@ -142,6 +191,14 @@ class PomodoroApp {
 document.addEventListener('DOMContentLoaded', () => {
   // Show content after CSS is loaded
   document.body.classList.add('loaded')
+
+  // Ensure app container is properly centered (remove any task list related classes)
+  const appElement = document.getElementById('app')
+  if (appElement) {
+    appElement.classList.remove('task-list-hidden')
+    // Remove any task list related styling
+    appElement.style.paddingLeft = ''
+  }
 
   // Initialize app
   window.pomodoroApp = new PomodoroApp()

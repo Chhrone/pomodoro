@@ -140,7 +140,7 @@
   padding: var(--spacing-sm) var(--spacing-md);
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius);
-  font-size: var(--font-size-sm);
+  font-size: max(16px, var(--font-size-sm)); /* Prevent iOS zoom */
   background: var(--bg-primary);
   color: var(--text-primary);
   transition: all var(--transition-fast);
@@ -261,6 +261,24 @@
   background: var(--primary-dark);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Danger button styles */
+.control-btn.danger {
+  background: var(--danger-color);
+  color: white;
+}
+
+.control-btn.danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(248, 113, 113, 0.3);
+}
+
+.control-btn.small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  min-width: auto;
 }
 
 .save-btn:active {

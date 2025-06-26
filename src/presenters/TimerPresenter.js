@@ -54,6 +54,13 @@ export class TimerPresenter extends EventEmitter {
       this.handleTimerSettingsSaved(newSettings)
     })
   }
+
+  /**
+   * Set report presenter reference for session tracking
+   */
+  setReportPresenter(reportPresenter) {
+    this.reportPresenter = reportPresenter
+  }
   
   /**
    * Setup model event listeners
@@ -115,17 +122,35 @@ export class TimerPresenter extends EventEmitter {
           this.model.formatTotalTime(data.totalFocusTime)
         )
       }
+
+      // Update session progress for reporting
+      if (this.reportPresenter) {
+        const elapsedTime = data.totalTime - data.timeRemaining
+        this.reportPresenter.updateSessionProgress(elapsedTime)
+      }
     })
     
     // Session events
     this.model.on('sessionCompleted', (data) => {
       this.timerView.animateCompletion()
       this.timerView.updateStats(data.completedSessions, this.model.formatTotalTime(data.totalFocusTime))
+
+      // Complete session tracking
+      if (this.reportPresenter) {
+        this.reportPresenter.completeSession()
+      }
+
       this.emit('sessionEnd', data.sessionType)
     })
     
     this.model.on('sessionSkipped', (data) => {
       this.updateUI()
+
+      // Cancel session tracking when skipped
+      if (this.reportPresenter) {
+        this.reportPresenter.cancelSession()
+      }
+
       // Skip notification removed - just update UI silently
     })
     
@@ -181,7 +206,8 @@ export class TimerPresenter extends EventEmitter {
       onStartPause: () => this.handleStartPause(),
       onReset: () => this.handleReset(),
       onSkip: () => this.handleSkip(),
-      onSettings: () => this.handleSettings()
+      onSettings: () => this.handleSettings(),
+      onTaskList: () => this.handleTaskList()
     })
     
     // Break confirmation view callbacks
@@ -250,6 +276,12 @@ export class TimerPresenter extends EventEmitter {
 
     if (!state.isRunning) {
       this.model.start()
+
+      // Start session tracking when timer starts
+      if (this.reportPresenter) {
+        const newState = this.model.getState()
+        this.reportPresenter.startSession(newState.currentSession, newState.totalTime)
+      }
     } else if (state.isPaused) {
       this.model.resume()
     } else {
@@ -261,6 +293,11 @@ export class TimerPresenter extends EventEmitter {
    * Handle reset button click
    */
   handleReset() {
+    // Cancel session tracking when reset
+    if (this.reportPresenter) {
+      this.reportPresenter.cancelSession()
+    }
+
     this.model.reset()
   }
 
@@ -291,6 +328,13 @@ export class TimerPresenter extends EventEmitter {
    */
   handleSettings() {
     this.emit('settingsRequested')
+  }
+
+  /**
+   * Handle task list button click
+   */
+  handleTaskList() {
+    this.emit('taskListRequested')
   }
   
   /**

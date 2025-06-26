@@ -11,6 +11,7 @@ export class MusicPlayerView {
       volumeDisplay: null,
       musicTrack: null,
       loadMusicBtn: null,
+      deleteTrackBtn: null,
       musicFileInput: null,
       nowPlaying: null,
       nowPlayingContent: null
@@ -32,6 +33,7 @@ export class MusicPlayerView {
     this.elements.volumeDisplay = document.getElementById('volume-display')
     this.elements.musicTrack = document.getElementById('music-track')
     this.elements.loadMusicBtn = document.getElementById('load-music-btn')
+    this.elements.deleteTrackBtn = document.getElementById('delete-track-btn')
     this.elements.musicFileInput = document.getElementById('music-file-input')
     this.elements.nowPlaying = document.getElementById('now-playing')
     this.elements.nowPlayingContent = document.getElementById('now-playing-content')
@@ -62,7 +64,12 @@ export class MusicPlayerView {
     // Track selection
     if (this.elements.musicTrack) {
       this.elements.musicTrack.addEventListener('change', (e) => {
-        this.callbacks.onTrackSelect?.(e.target.value)
+        const trackId = e.target.value
+        if (trackId) {
+          this.callbacks.onTrackSelected?.(trackId)
+        }
+        // Update delete button state
+        this.setDeleteButtonEnabled(!!trackId)
       })
     }
     
@@ -70,6 +77,16 @@ export class MusicPlayerView {
     if (this.elements.loadMusicBtn) {
       this.elements.loadMusicBtn.addEventListener('click', () => {
         this.openFileDialog()
+      })
+    }
+
+    // Delete track button
+    if (this.elements.deleteTrackBtn) {
+      this.elements.deleteTrackBtn.addEventListener('click', () => {
+        const selectedTrackId = this.elements.musicTrack?.value
+        if (selectedTrackId) {
+          this.callbacks.onTrackDelete?.(selectedTrackId)
+        }
       })
     }
     
@@ -120,10 +137,10 @@ export class MusicPlayerView {
    */
   updateTracksList(tracks, currentTrackId) {
     if (!this.elements.musicTrack) return
-    
+
     // Clear existing options
     this.elements.musicTrack.innerHTML = ''
-    
+
     if (tracks.length === 0) {
       // No tracks available
       const option = document.createElement('option')
@@ -132,21 +149,23 @@ export class MusicPlayerView {
       option.disabled = true
       this.elements.musicTrack.appendChild(option)
       this.elements.musicTrack.disabled = true
+      this.setDeleteButtonEnabled(false)
     } else {
       // Add tracks
       tracks.forEach(track => {
         const option = document.createElement('option')
         option.value = track.id
         option.textContent = track.name
-        
+
         if (track.id === currentTrackId) {
           option.selected = true
         }
-        
+
         this.elements.musicTrack.appendChild(option)
       })
-      
+
       this.elements.musicTrack.disabled = false
+      this.setDeleteButtonEnabled(true)
     }
   }
   
@@ -155,9 +174,16 @@ export class MusicPlayerView {
    */
   updateCurrentTrack(track) {
     if (!this.elements.musicTrack || !track) return
-    
+
     // Select the track in dropdown
     this.elements.musicTrack.value = track.id
+  }
+
+  /**
+   * Update track selection (alias for updateCurrentTrack for compatibility)
+   */
+  updateTrackSelection(track) {
+    this.updateCurrentTrack(track)
   }
   
   /**
@@ -179,13 +205,19 @@ export class MusicPlayerView {
       this.elements.musicTrack,
       this.elements.loadMusicBtn
     ]
-    
+
     controls.forEach(control => {
       if (control) {
         control.disabled = !enabled
       }
     })
-    
+
+    // Delete button should be enabled only if music is enabled and there are tracks
+    if (this.elements.deleteTrackBtn) {
+      const hasSelectedTrack = this.elements.musicTrack?.value && this.elements.musicTrack.value !== ''
+      this.elements.deleteTrackBtn.disabled = !enabled || !hasSelectedTrack
+    }
+
     // Update visual state
     const musicSection = this.elements.musicEnabled?.closest('.settings-section')
     if (musicSection) {
@@ -194,6 +226,17 @@ export class MusicPlayerView {
       } else {
         musicSection.classList.add('disabled')
       }
+    }
+  }
+
+  /**
+   * Set delete button enabled state
+   */
+  setDeleteButtonEnabled(enabled) {
+    if (this.elements.deleteTrackBtn) {
+      const musicEnabled = this.elements.musicEnabled?.checked || false
+      const hasSelectedTrack = this.elements.musicTrack?.value && this.elements.musicTrack.value !== ''
+      this.elements.deleteTrackBtn.disabled = !musicEnabled || !enabled || !hasSelectedTrack
     }
   }
   
@@ -219,18 +262,54 @@ export class MusicPlayerView {
    * Show success message
    */
   showSuccess(message) {
-    // For now, just log to console
-    // In a real app, you might show a toast notification
     console.log('Music Success:', message)
+    this.showNotification(message, 'success')
   }
-  
+
   /**
    * Show error message
    */
   showError(message) {
-    // For now, just log to console
-    // In a real app, you might show a toast notification
     console.error('Music Error:', message)
+    this.showNotification(message, 'error')
+  }
+
+  /**
+   * Show notification
+   */
+  showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div')
+    notification.className = `music-notification ${type}`
+    notification.textContent = message
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `
+
+    document.body.appendChild(notification)
+
+    // Animate in
+    setTimeout(() => {
+      notification.style.transform = 'translateX(0)'
+    }, 10)
+
+    // Remove after delay
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)'
+      setTimeout(() => notification.remove(), 300)
+    }, 3000)
   }
   
   /**

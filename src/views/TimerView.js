@@ -11,8 +11,8 @@ export class TimerView {
       sessionCounter: null,
       timerMinutes: null,
       timerSeconds: null,
-      progressRing: null,
-      sessionDots: null,
+      // progressRing: null, // Not used in current design
+      // sessionDots: null, // Not used in current design
       startPauseBtn: null,
       resetBtn: null,
       skipBtn: null,
@@ -45,13 +45,14 @@ export class TimerView {
     this.elements.timerMinutes = document.getElementById('timer-minutes')
     this.elements.timerSeconds = document.getElementById('timer-seconds')
     this.elements.timerCircle = document.getElementById('timer-circle')
-    this.elements.sessionDots = document.getElementById('session-dots')
+    // this.elements.sessionDots = document.getElementById('session-dots') // Not used in current design
     this.elements.startPauseBtn = document.getElementById('start-pause-btn')
     this.elements.resetBtn = document.getElementById('reset-btn')
     this.elements.skipBtn = document.getElementById('skip-btn')
     this.elements.completedSessions = document.getElementById('completed-sessions')
     this.elements.totalFocusTime = document.getElementById('total-focus-time')
     this.elements.settingsBtn = document.getElementById('settings-btn')
+    this.elements.taskListBtn = document.getElementById('task-list-btn')
 
     // Log which elements were found
     Object.entries(this.elements).forEach(([key, element]) => {
@@ -113,6 +114,12 @@ export class TimerView {
     if (this.elements.settingsBtn) {
       this.elements.settingsBtn.addEventListener('click', () => {
         this.callbacks.onSettings?.()
+      })
+    }
+
+    if (this.elements.taskListBtn) {
+      this.elements.taskListBtn.addEventListener('click', () => {
+        this.callbacks.onTaskList?.()
       })
     }
     
@@ -402,14 +409,14 @@ export class TimerView {
    * Animate timer completion
    */
   animateCompletion() {
-    if (!this.elements.progressRing) return
+    if (!this.elements.timerCircle) return
 
     // Add completion animation class
-    this.elements.progressRing.classList.add('completed')
+    this.elements.timerCircle.classList.add('completed')
 
     // Remove after animation
     setTimeout(() => {
-      this.elements.progressRing.classList.remove('completed')
+      this.elements.timerCircle.classList.remove('completed')
     }, 1000)
   }
 
@@ -417,18 +424,15 @@ export class TimerView {
    * Animate fast completion for skip action
    */
   animateSkipCompletion(sessionType = null) {
-    if (!this.elements.progressRing) return
-
-    const circle = this.elements.progressRing.querySelector('.progress-ring-fill')
-    if (!circle) return
+    if (!this.elements.timerCircle) return
 
     // Update session type if provided
     if (sessionType) {
       this.currentSessionType = sessionType
     }
 
-    // Temporarily speed up animation
-    circle.style.transition = 'stroke-dashoffset 0.5s ease-out'
+    // Add fast completion animation
+    this.elements.timerCircle.style.transition = 'all 0.5s ease-out'
 
     if (this.currentSessionType === 'work') {
       // Work sessions: quickly fill to complete
@@ -440,7 +444,7 @@ export class TimerView {
 
     // Restore normal transition speed after animation
     setTimeout(() => {
-      circle.style.transition = 'stroke-dashoffset var(--transition-normal) ease-in-out'
+      this.elements.timerCircle.style.transition = ''
     }, 500)
   }
   
@@ -489,8 +493,8 @@ export class TimerView {
    * Add pulse animation to timer
    */
   addPulseAnimation() {
-    if (this.elements.progressRing) {
-      this.elements.progressRing.classList.add('pulse')
+    if (this.elements.timerCircle) {
+      this.elements.timerCircle.classList.add('pulse')
     }
   }
 
@@ -498,8 +502,8 @@ export class TimerView {
    * Remove pulse animation from timer
    */
   removePulseAnimation() {
-    if (this.elements.progressRing) {
-      this.elements.progressRing.classList.remove('pulse')
+    if (this.elements.timerCircle) {
+      this.elements.timerCircle.classList.remove('pulse')
     }
   }
   

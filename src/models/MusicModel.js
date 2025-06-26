@@ -100,62 +100,160 @@ export class MusicModel {
   }
   
   /**
-   * Load default music from assets
+   * Load music tracks from manifest and user storage
    */
-  loadDefaultMusic() {
-    const defaultTracks = [
-      {
-        id: 'default_skyrim',
-        name: 'Skyrim Ambience - Study & Relaxation Music',
-        url: '/src/assets/music/Skyrim%20Ambience%20-%20Study%20&%20Relaxation%20Music.mp3',
-        format: 'mp3',
-        isDefault: true
+  async loadMusicTracks() {
+    try {
+      // Load default tracks from manifest
+      const defaultTracks = await this.loadDefaultTracks()
+
+      // Load user tracks from localStorage
+      const userTracks = this.loadUserTracks()
+
+      // Combine all tracks
+      this.state.tracks = [...defaultTracks, ...userTracks]
+
+      // Set first track as current if none selected
+      if (this.state.tracks.length > 0 && this.state.currentTrackIndex === -1) {
+        this.state.currentTrackIndex = 0
+        this.config.currentTrack = this.state.tracks[0].id
       }
-    ]
 
-    this.state.tracks = defaultTracks
+      this.emit('tracksLoaded', {
+        tracks: this.state.tracks,
+        currentTrack: this.getCurrentTrack()
+      })
 
-    // Set first track as current
-    if (defaultTracks.length > 0) {
-      this.state.currentTrackIndex = 0
-      this.config.currentTrack = defaultTracks[0].id
+      return this.state.tracks
+    } catch (error) {
+      console.error('Failed to load music tracks:', error)
+      this.emit('error', { error: 'Failed to load music tracks' })
+      return []
     }
+  }
 
-    this.emit('tracksLoaded', {
-      tracks: this.state.tracks,
-      currentTrack: this.getCurrentTrack()
-    })
+  /**
+   * Load default tracks from assets folder
+   */
+  async loadDefaultTracks() {
+    const defaultTracks = []
+
+    // In deployment, there might be no default music files
+    // This is expected behavior - users will add their own music
+
+    try {
+      // Import music files directly using Vite's import system with eager loading
+      const musicModules = import.meta.glob('/src/assets/music/*.mp3', {
+        eager: true,
+        query: '?url',
+        import: 'default'
+      })
+
+      const moduleEntries = Object.entries(musicModules)
+
+      if (moduleEntries.length === 0) {
+        console.info('No default music files found in assets/music folder. This is normal for deployment - users can add their own music.')
+        return defaultTracks
+      }
+
+      for (const [path, url] of moduleEntries) {
+        try {
+          const filename = path.split('/').pop()
+          const trackName = filename.replace('.mp3', '').replace(/[_-]/g, ' ')
+
+          defaultTracks.push({
+            id: `default_${filename.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}`,
+            name: trackName,
+            url: url,
+            format: 'mp3',
+            isDefault: true,
+            filename: filename
+          })
+          console.log(`Loaded default music file: ${filename}`)
+        } catch (error) {
+          console.warn(`Failed to load music file from ${path}:`, error)
+        }
+      }
+
+      console.log(`Loaded ${defaultTracks.length} default music tracks`)
+    } catch (error) {
+      console.info('No default music tracks available. Users can add their own music files.')
+    }
 
     return defaultTracks
   }
 
   /**
-   * Load music files from file input
+   * Load user tracks from localStorage
    */
-  loadMusicFiles(files) {
-    const tracks = []
+  loadUserTracks() {
+    try {
+      const stored = localStorage.getItem('pomodoro_user_music')
+      if (!stored) return []
 
-    Array.from(files).forEach((file, index) => {
+      const userTracks = JSON.parse(stored)
+      return userTracks.map(track => ({
+        ...track,
+        isDefault: false
+      }))
+    } catch (error) {
+      console.warn('Failed to load user tracks from storage:', error)
+      return []
+    }
+  }
+
+  /**
+   * Save user tracks to localStorage
+   */
+  saveUserTracks() {
+    try {
+      const userTracks = this.state.tracks.filter(track => !track.isDefault)
+      localStorage.setItem('pomodoro_user_music', JSON.stringify(userTracks))
+    } catch (error) {
+      console.error('Failed to save user tracks:', error)
+    }
+  }
+
+  /**
+   * Load music files from file input and add to existing tracks
+   */
+  async loadMusicFiles(files) {
+    const newTracks = []
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
       if (file.type.startsWith('audio/')) {
-        const track = {
-          id: `track_${Date.now()}_${index}`,
-          name: this.extractTrackName(file.name),
-          file: file,
-          url: URL.createObjectURL(file),
-          size: file.size,
-          duration: null, // Will be set when loaded
-          format: this.getAudioFormat(file.name, file.type) // Add format detection
-        }
-        tracks.push(track)
-      }
-    })
+        try {
+          // Convert file to base64 for storage
+          const base64Data = await this.fileToBase64(file)
 
-    this.state.tracks = tracks
+          const track = {
+            id: `user_track_${Date.now()}_${i}`,
+            name: this.extractTrackName(file.name),
+            url: base64Data,
+            size: file.size,
+            duration: null,
+            format: this.getAudioFormat(file.name, file.type),
+            isDefault: false,
+            addedDate: new Date().toISOString()
+          }
+          newTracks.push(track)
+        } catch (error) {
+          console.error('Failed to process file:', file.name, error)
+        }
+      }
+    }
+
+    // Add new tracks to existing tracks
+    this.state.tracks = [...this.state.tracks, ...newTracks]
+
+    // Save user tracks to localStorage
+    this.saveUserTracks()
 
     // Set first track as current if none selected
-    if (tracks.length > 0 && this.state.currentTrackIndex === -1) {
+    if (this.state.tracks.length > 0 && this.state.currentTrackIndex === -1) {
       this.state.currentTrackIndex = 0
-      this.config.currentTrack = tracks[0].id
+      this.config.currentTrack = this.state.tracks[0].id
     }
 
     this.emit('tracksLoaded', {
@@ -163,7 +261,41 @@ export class MusicModel {
       currentTrack: this.getCurrentTrack()
     })
 
-    return tracks
+    return newTracks
+  }
+
+  /**
+   * Convert file to base64 for storage
+   */
+  fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  /**
+   * Clear all user tracks
+   */
+  clearUserTracks() {
+    this.state.tracks = this.state.tracks.filter(track => track.isDefault)
+    this.saveUserTracks()
+
+    // Reset current track if it was a user track
+    if (this.state.currentTrackIndex >= 0) {
+      const currentTrack = this.getCurrentTrack()
+      if (currentTrack && !currentTrack.isDefault) {
+        this.state.currentTrackIndex = this.state.tracks.length > 0 ? 0 : -1
+        this.config.currentTrack = this.state.tracks.length > 0 ? this.state.tracks[0].id : null
+      }
+    }
+
+    this.emit('tracksLoaded', {
+      tracks: this.state.tracks,
+      currentTrack: this.getCurrentTrack()
+    })
   }
 
   /**
@@ -222,26 +354,49 @@ export class MusicModel {
     }
     return null
   }
+
+  /**
+   * Get track by ID
+   */
+  getTrackById(trackId) {
+    return this.state.tracks.find(track => track.id === trackId)
+  }
   
   /**
    * Select track by ID
    */
-  selectTrack(trackId) {
+  selectTrack(trackId, autoPlay = false) {
     const trackIndex = this.state.tracks.findIndex(track => track.id === trackId)
-    
+
     if (trackIndex >= 0) {
+      const previousTrackId = this.config.currentTrack
+      const wasPlaying = this.state.isPlaying
+
       this.state.currentTrackIndex = trackIndex
       this.config.currentTrack = trackId
-      
+
       const track = this.state.tracks[trackIndex]
-      
-      // Stop current playback
-      this.stop()
-      
-      this.emit('trackSelected', { track })
+
+      // Stop current playback if track changed
+      if (previousTrackId !== trackId) {
+        this.stop()
+
+        // If music was playing and track changed, start playing new track
+        if (wasPlaying || autoPlay) {
+          setTimeout(() => {
+            this.play()
+          }, 100) // Small delay to ensure clean transition
+        }
+      }
+
+      this.emit('trackSelected', {
+        track,
+        wasPlaying,
+        autoSwitched: wasPlaying && previousTrackId !== trackId
+      })
       return track
     }
-    
+
     return null
   }
   
@@ -268,11 +423,74 @@ export class MusicModel {
   }
   
   /**
+   * Delete track by ID
+   */
+  deleteTrack(trackId) {
+    try {
+      const trackIndex = this.state.tracks.findIndex(track => track.id === trackId)
+      if (trackIndex === -1) {
+        return false
+      }
+
+      const track = this.state.tracks[trackIndex]
+      const wasCurrentTrack = this.state.currentTrackIndex === trackIndex
+
+      // Stop playback if deleting current track
+      if (wasCurrentTrack && this.state.isPlaying) {
+        this.stop()
+      }
+
+      // Remove track from array
+      this.state.tracks.splice(trackIndex, 1)
+
+      // Update current track index if needed
+      if (this.state.currentTrackIndex > trackIndex) {
+        this.state.currentTrackIndex--
+      } else if (this.state.currentTrackIndex === trackIndex) {
+        // Current track was deleted, select next available track
+        if (this.state.tracks.length > 0) {
+          if (trackIndex >= this.state.tracks.length) {
+            this.state.currentTrackIndex = this.state.tracks.length - 1
+          }
+          // else keep same index (which now points to next track)
+          this.config.currentTrack = this.state.tracks[this.state.currentTrackIndex]?.id || null
+        } else {
+          this.state.currentTrackIndex = -1
+          this.config.currentTrack = null
+        }
+      }
+
+      // Remove from user tracks in localStorage if it's a user track
+      if (track.isUserTrack) {
+        const userTracks = this.loadUserTracks()
+        const updatedUserTracks = userTracks.filter(userTrack => userTrack.id !== trackId)
+        localStorage.setItem('userMusicTracks', JSON.stringify(updatedUserTracks))
+      }
+
+      // Clean up URL if it's a blob URL
+      if (track.url && track.url.startsWith('blob:')) {
+        URL.revokeObjectURL(track.url)
+      }
+
+      // Emit tracks updated event
+      this.emit('tracksLoaded', {
+        tracks: this.state.tracks,
+        currentTrack: this.getCurrentTrack()
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error deleting track:', error)
+      return false
+    }
+  }
+
+  /**
    * Check if can play music
    */
   canPlay() {
-    return this.config.enabled && 
-           this.state.tracks.length > 0 && 
+    return this.config.enabled &&
+           this.state.tracks.length > 0 &&
            this.state.currentTrackIndex >= 0
   }
   
@@ -304,9 +522,16 @@ export class MusicModel {
       volume: this.config.volume,
       html5: true, // Force HTML5 Audio for better file support
       preload: true, // Preload the audio
+      xhr: {
+        method: 'GET',
+        headers: {
+          'Accept': 'audio/*'
+        }
+      },
       onload: () => {
         this.state.duration = this.howl.duration()
         this.state.isLoading = false
+        console.log(`Successfully loaded: ${currentTrack.name}`)
         this.emit('metadataLoaded', {
           duration: this.state.duration
         })
@@ -333,12 +558,14 @@ export class MusicModel {
         this.emit('trackEnded')
       },
       onloaderror: (_, error) => {
-        this.state.error = 'Failed to load audio file'
+        this.state.error = `Failed to load audio file: ${currentTrack.name}`
         this.state.isLoading = false
-        console.error('Howler load error:', error)
+        console.error('Howler load error for track:', currentTrack.name, error)
+        console.error('Track URL:', currentTrack.url)
         this.emit('error', {
           error: this.state.error,
-          details: error
+          details: error,
+          track: currentTrack
         })
       },
       onplayerror: (_, error) => {

@@ -19,8 +19,8 @@ export class MusicPresenter {
     // Initialize UI from model state
     this.initializeUI()
 
-    // Load default music
-    this.loadDefaultMusic()
+    // Load music tracks
+    this.loadMusicTracks()
   }
   
   /**
@@ -118,6 +118,14 @@ export class MusicPresenter {
       
       onFilesSelected: (files) => {
         this.handleFilesSelected(files)
+      },
+
+      onTrackSelected: (trackId) => {
+        this.handleTrackSelection(trackId)
+      },
+
+      onTrackDelete: (trackId) => {
+        this.handleTrackDeletion(trackId)
       }
     })
   }
@@ -161,7 +169,60 @@ export class MusicPresenter {
       this.view.showError('Failed to load music files: ' + error.message)
     }
   }
-  
+
+  /**
+   * Handle track selection from dropdown
+   */
+  handleTrackSelection(trackId) {
+    try {
+      // Check if music is currently playing to determine auto-switch
+      const wasPlaying = this.model.state.isPlaying
+      const track = this.model.selectTrack(trackId, false) // Don't auto-play, let the model decide
+
+      if (track) {
+        this.view.updateTrackSelection(track)
+
+        // Show feedback if track was auto-switched
+        if (wasPlaying && track) {
+          this.view.showSuccess(`Switched to: ${track.name}`)
+        }
+      }
+    } catch (error) {
+      console.error('MusicPresenter: Error selecting track:', error)
+      this.view.showError('Failed to select track')
+    }
+  }
+
+  /**
+   * Handle track deletion
+   */
+  handleTrackDeletion(trackId) {
+    try {
+      const track = this.model.getTrackById(trackId)
+      if (!track) {
+        this.view.showError('Track not found')
+        return
+      }
+
+      // Confirm deletion
+      const confirmDelete = confirm(`Are you sure you want to delete "${track.name}"?`)
+      if (!confirmDelete) {
+        return
+      }
+
+      // Delete the track
+      const success = this.model.deleteTrack(trackId)
+      if (success) {
+        this.view.showSuccess(`Deleted: ${track.name}`)
+      } else {
+        this.view.showError('Failed to delete track')
+      }
+    } catch (error) {
+      console.error('MusicPresenter: Error deleting track:', error)
+      this.view.showError('Failed to delete track')
+    }
+  }
+
   /**
    * Start music playback (called by timer)
    */
@@ -237,13 +298,27 @@ export class MusicPresenter {
   }
   
   /**
-   * Load default music from assets
+   * Load music tracks from assets and storage
    */
-  loadDefaultMusic() {
+  async loadMusicTracks() {
     try {
-      this.model.loadDefaultMusic()
+      await this.model.loadMusicTracks()
     } catch (error) {
-      console.error('MusicPresenter: Error loading default music:', error)
+      console.error('MusicPresenter: Error loading music tracks:', error)
+      this.view.showError('Failed to load music tracks')
+    }
+  }
+
+  /**
+   * Clear all user tracks
+   */
+  clearUserTracks() {
+    try {
+      this.model.clearUserTracks()
+      this.view.showSuccess('User music tracks cleared')
+    } catch (error) {
+      console.error('MusicPresenter: Error clearing user tracks:', error)
+      this.view.showError('Failed to clear user tracks')
     }
   }
 

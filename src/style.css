@@ -6,6 +6,7 @@
 @import './styles/components.css';
 @import './styles/break-confirmation.css';
 @import './styles/settings.css';
+@import './styles/task-list.css';
 @import './styles/responsive.css';
 
 /* SVG Gradient Definition for Progress Ring */

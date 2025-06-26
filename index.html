@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Pomodoro Timer</title>
     <link rel="icon" type="image/png" href="/src/assets/pomodoro-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,6 +35,9 @@
   </head>
   <body>
     <div id="app">
+      <!-- Task List Feature - Under Development -->
+      <!-- Task list functionality is currently being developed and will be available in a future update -->
+
       <!-- Now Playing Background -->
       <div id="now-playing" class="now-playing hidden">
         <div id="now-playing-content" class="now-playing-content">
@@ -97,6 +100,11 @@
             </div>
           </div>
 
+          <!-- Development Note -->
+          <div class="development-note">
+            <p>📝 <strong>Task List Feature</strong> is currently under development and will be available in a future update!</p>
+          </div>
+
 
         </main>
       </div>
@@ -134,14 +142,49 @@
             <button id="close-report-btn" class="close-btn">×</button>
           </div>
           <div class="modal-body">
-            <div class="report-stats">
-              <div class="stat-item">
-                <div class="stat-label">Total Focus Time</div>
-                <div id="report-focus-time" class="stat-value">00:00:00</div>
+            <!-- Current Session Stats -->
+            <div class="report-section">
+              <h3>Current Session Stats</h3>
+              <div class="report-stats-horizontal">
+                <div class="stat-item">
+                  <div class="stat-label">Total Focus Time</div>
+                  <div id="report-focus-time" class="stat-value">00:00:00</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Completed Sessions</div>
+                  <div id="report-sessions" class="stat-value">0</div>
+                </div>
               </div>
-              <div class="stat-item">
-                <div class="stat-label">Completed Sessions</div>
-                <div id="report-sessions" class="stat-value">0</div>
+            </div>
+
+            <!-- Daily Reports -->
+            <div class="report-section">
+              <h3>Daily Reports</h3>
+              <div class="date-selector-container">
+                <label for="report-date-selector">Select Date:</label>
+                <select id="report-date-selector">
+                  <option value="">Loading...</option>
+                </select>
+              </div>
+
+              <div id="daily-report-container">
+                <div class="daily-stats-horizontal">
+                  <div class="stat-item">
+                    <div class="stat-label">Daily Focus Time</div>
+                    <div id="daily-focus-time" class="stat-value">0h 0m 0s</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Total Sessions</div>
+                    <div id="daily-sessions" class="stat-value">0</div>
+                  </div>
+                </div>
+
+                <div class="weekly-chart-container">
+                  <h4>Weekly Activity</h4>
+                  <div id="weekly-chart" class="weekly-chart">
+                    <!-- Chart will be populated here -->
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -190,12 +233,16 @@
                 <span id="volume-display">50%</span>
               </div>
               <div class="setting-item track-selection">
-                <label for="music-track">Select Track</label>
-                <div style="display: flex; gap: var(--spacing-sm);">
-                  <select id="music-track">
-                    <option value="">No music files found</option>
+                <label for="music-track">Music Settings</label>
+                <div style="margin-bottom: var(--spacing-sm);">
+                  <button id="load-music-btn" class="control-btn secondary small" style="width: 100%;">Insert Music</button>
+                </div>
+                <div>
+                  <label for="music-track" style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--spacing-xs); display: block;">Select Track:</label>
+                  <select id="music-track" style="width: 100%; margin-bottom: var(--spacing-xs);">
+                    <option value="">Loading music tracks...</option>
                   </select>
-                  <button id="load-music-btn" class="control-btn secondary small">Insert Music</button>
+                  <button id="delete-track-btn" class="control-btn danger small" title="Delete selected track">🗑️ Delete Track</button>
                 </div>
               </div>
             </section>
@@ -236,6 +283,21 @@
             </section>
           </div>
         </div>
+      </div>
+
+      <!-- Task List Panel - Feature Under Development -->
+      <!--
+        Task List Feature is currently under development.
+        This feature will allow users to:
+        - Create and manage tasks
+        - Track task progress
+        - Organize tasks by categories
+        - Drag and drop task reordering
+
+        Coming soon in a future update!
+      -->
+      <div id="task-list-panel" class="task-list-panel hidden" style="display: none;">
+        <!-- Task list content hidden during development -->
       </div>
 
       <!-- File Input for Music (Hidden) -->

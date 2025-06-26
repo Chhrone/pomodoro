@@ -7,11 +7,13 @@
   /* Color Variables */
   --primary-color: #667eea;
   --primary-dark: #5a6fd8;
+  --primary-light: #8b9df0;
   --secondary-color: #764ba2;
   --accent-color: #f093fb;
   --success-color: #4ade80;
   --warning-color: #fbbf24;
   --danger-color: #f87171;
+  --error-color: #f87171;
 
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
@@ -24,6 +26,7 @@
 
   --border-color: #e5e7eb;
   --border-radius: 12px;
+  --border-radius-sm: 6px;
   --border-radius-lg: 20px;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -50,6 +53,7 @@
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
+  --font-size-xxl: 1.375rem;
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
