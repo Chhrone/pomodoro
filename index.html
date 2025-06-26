@@ -46,6 +46,49 @@
         </div>
       </div>
 
+      <!-- Music Controls -->
+      <div id="music-controls" class="music-controls hidden">
+        <div class="music-controls-content">
+          <button id="music-prev-btn" class="music-control-btn" title="Previous Track">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+            </svg>
+          </button>
+
+          <button id="music-play-pause-btn" class="music-control-btn primary" title="Play/Pause">
+            <svg id="music-play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg id="music-pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+
+          <button id="music-next-btn" class="music-control-btn" title="Next Track">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 18h2V6h-2v12zM6 18l8.5-6L6 6v12z"/>
+            </svg>
+          </button>
+
+          <button id="music-mode-btn" class="music-control-btn" title="Toggle Loop/List Mode">
+            <svg id="music-loop-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+            </svg>
+            <svg id="music-list-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+              <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+            </svg>
+          </button>
+
+          <div class="music-volume-control">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+            </svg>
+            <input type="range" id="music-volume-slider" min="0" max="100" value="100" class="volume-slider">
+            <span id="music-volume-display" class="volume-display">100%</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Main Timer Interface -->
       <div id="timer-container" class="container">
         <header class="header">

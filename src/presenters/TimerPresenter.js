@@ -131,6 +131,12 @@ export class TimerPresenter extends EventEmitter {
 
       this.emit('sessionEnd', data.sessionType)
     })
+
+    // Short break auto-start
+    this.model.on('shortBreakStarted', (data) => {
+      this.updateUI()
+      this.emit('sessionStart', data.sessionType)
+    })
     
     this.model.on('sessionSkipped', (data) => {
       this.updateUI()

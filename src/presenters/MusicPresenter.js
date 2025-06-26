@@ -4,17 +4,22 @@
  */
 import { MusicModel } from '../models/MusicModel.js'
 import { MusicPlayerView } from '../views/MusicPlayerView.js'
+import { MusicControlsView } from '../views/MusicControlsView.js'
+import { EventEmitter } from '../utils/EventEmitter.js'
 
-export class MusicPresenter {
+export class MusicPresenter extends EventEmitter {
   constructor() {
+    super()
     this.model = new MusicModel()
     this.view = new MusicPlayerView()
-    
+    this.controlsView = new MusicControlsView()
+
     // Setup model event listeners
     this.setupModelListeners()
     
     // Setup view callbacks
     this.setupViewCallbacks()
+    this.setupControlsViewCallbacks()
     
     // Initialize UI from model state
     this.initializeUI()
@@ -63,22 +68,33 @@ export class MusicPresenter {
     
     this.model.on('playStarted', () => {
       // Music started playing
+      this.controlsView.updatePlayPauseState(true)
       console.log('Music playback started')
     })
-    
+
     this.model.on('playPaused', () => {
       // Music paused
+      this.controlsView.updatePlayPauseState(false)
       console.log('Music playback paused')
     })
-    
+
     this.model.on('playStopped', () => {
       // Music stopped
+      this.controlsView.updatePlayPauseState(false)
       console.log('Music playback stopped')
     })
-    
+
     this.model.on('trackEnded', () => {
       // Track ended (shouldn't happen with loop enabled)
       console.log('Music track ended')
+    })
+
+    this.model.on('playbackModeChanged', (data) => {
+      this.controlsView.updatePlaybackMode(data.mode)
+    })
+
+    this.model.on('volumeChanged', (data) => {
+      this.controlsView.updateVolumeDisplay(Math.round(data.volume * 100))
     })
     
     this.model.on('volumeChanged', (data) => {
@@ -142,6 +158,34 @@ export class MusicPresenter {
     this.view.updateTracksList(state.tracks, config.currentTrack)
   }
   
+  /**
+   * Setup controls view callbacks
+   */
+  setupControlsViewCallbacks() {
+    this.controlsView.setCallbacks({
+      onPlayPauseToggle: () => {
+        this.togglePlayPause()
+      },
+
+      onPreviousTrack: () => {
+        this.previousTrack()
+      },
+
+      onNextTrack: () => {
+        this.nextTrack()
+      },
+
+      onModeToggle: () => {
+        const newMode = this.togglePlaybackMode()
+        this.view.showSuccess(`Playback mode: ${newMode === 'loop' ? 'Loop Track' : 'Play List'}`)
+      },
+
+      onVolumeChange: (volumePercent) => {
+        this.setVolume(volumePercent)
+      }
+    })
+  }
+
   /**
    * Handle file selection
    */
@@ -289,6 +333,49 @@ export class MusicPresenter {
   updateConfig(config) {
     this.model.updateConfig(config)
   }
+
+  /**
+   * Toggle playback mode (loop/list)
+   */
+  togglePlaybackMode() {
+    return this.model.togglePlaybackMode()
+  }
+
+  /**
+   * Go to next track
+   */
+  nextTrack() {
+    return this.model.nextTrack()
+  }
+
+  /**
+   * Go to previous track
+   */
+  previousTrack() {
+    return this.model.previousTrack()
+  }
+
+  /**
+   * Set volume (0-100)
+   */
+  setVolume(volumePercent) {
+    const volume = volumePercent / 100
+    this.model.setVolume(volume)
+  }
+
+  /**
+   * Toggle play/pause
+   */
+  togglePlayPause() {
+    const state = this.model.getState()
+    if (state.isPlaying) {
+      return this.model.pause()
+    } else if (state.isPaused) {
+      return this.model.resume()
+    } else {
+      return this.model.play()
+    }
+  }
   
   /**
    * Clear all loaded tracks
@@ -330,6 +417,11 @@ export class MusicPresenter {
     if (currentTrack) {
       this.view.updateNowPlaying(currentTrack.name)
     }
+
+    // Show music controls if music is enabled and tracks are available
+    if (this.model.getConfig().enabled && this.model.getState().tracks.length > 0) {
+      this.showMusicControls()
+    }
   }
 
   /**
@@ -337,6 +429,37 @@ export class MusicPresenter {
    */
   hideNowPlaying() {
     this.view.hideNowPlaying()
+    this.hideMusicControls()
+  }
+
+  /**
+   * Show music controls
+   */
+  showMusicControls() {
+    const config = this.model.getConfig()
+    const state = this.model.getState()
+
+    this.controlsView.updateFromState({
+      isVisible: true,
+      enabled: config.enabled && state.tracks.length > 0,
+      isPlaying: state.isPlaying,
+      volume: Math.round(config.volume * 100),
+      mode: config.playbackMode
+    })
+
+    // Update navigation state based on mode and track count
+    const canNavigate = state.tracks.length > 1
+    this.controlsView.updateNavigationState(
+      canNavigate && config.playbackMode === 'list',
+      canNavigate && config.playbackMode === 'list'
+    )
+  }
+
+  /**
+   * Hide music controls
+   */
+  hideMusicControls() {
+    this.controlsView.hide()
   }
 
   /**

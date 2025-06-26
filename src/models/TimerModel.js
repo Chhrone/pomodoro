@@ -1,4 +1,7 @@
 // Timer state management and session tracking
+import { TimerWorkerManager } from '../utils/TimerWorkerManager.js'
+import { NotificationManager } from '../utils/NotificationManager.js'
+
 export class TimerModel {
   constructor() {
     this.config = {
@@ -30,6 +33,56 @@ export class TimerModel {
     this.interval = null
     this.graceTimeout = null
     this.listeners = {}
+
+    // Initialize Web Worker for precise timing
+    this.timerWorker = new TimerWorkerManager()
+    this.setupWorkerListeners()
+
+    // Initialize notification system
+    this.notificationManager = new NotificationManager()
+  }
+
+  /**
+   * Setup Web Worker event listeners
+   */
+  setupWorkerListeners() {
+    this.timerWorker.on('tick', (data) => {
+      this.state.timeRemaining = data.timeRemaining
+
+      // Track focus time in real-time for work sessions
+      if (this.state.currentSession === 'work') {
+        this.state.totalFocusTime += 1
+      }
+
+      this.emit('timerTick', {
+        timeRemaining: data.timeRemaining,
+        totalTime: data.totalTime,
+        progress: data.progress,
+        totalFocusTime: this.state.totalFocusTime
+      })
+    })
+
+    this.timerWorker.on('completed', () => {
+      this.sessionComplete()
+    })
+
+    this.timerWorker.on('started', () => {
+      this.state.isRunning = true
+      this.state.isPaused = false
+    })
+
+    this.timerWorker.on('paused', () => {
+      this.state.isPaused = true
+    })
+
+    this.timerWorker.on('resumed', () => {
+      this.state.isPaused = false
+    })
+
+    this.timerWorker.on('stopped', () => {
+      this.state.isRunning = false
+      this.state.isPaused = false
+    })
   }
 
   // Event system
@@ -72,13 +125,9 @@ export class TimerModel {
   start() {
     if (this.state.isRunning) return
 
-    this.state.isRunning = true
-    this.state.isPaused = false
-    
-    this.interval = setInterval(() => {
-      this.tick()
-    }, 1000)
-    
+    // Start Web Worker timer
+    this.timerWorker.startTimer(Math.ceil(this.state.timeRemaining))
+
     this.emit('timerStarted', {
       sessionType: this.state.currentSession,
       timeRemaining: this.state.timeRemaining
@@ -88,9 +137,8 @@ export class TimerModel {
   pause() {
     if (!this.state.isRunning || this.state.isPaused) return
 
-    this.state.isPaused = true
-    clearInterval(this.interval)
-    this.interval = null
+    // Pause Web Worker timer
+    this.timerWorker.pauseTimer()
 
     this.emit('timerPaused', {
       timeRemaining: this.state.timeRemaining
@@ -100,11 +148,8 @@ export class TimerModel {
   resume() {
     if (!this.state.isRunning || !this.state.isPaused) return
 
-    this.state.isPaused = false
-
-    this.interval = setInterval(() => {
-      this.tick()
-    }, 1000)
+    // Resume Web Worker timer
+    this.timerWorker.resumeTimer()
 
     this.emit('timerResumed', {
       timeRemaining: this.state.timeRemaining
@@ -140,13 +185,8 @@ export class TimerModel {
   }
 
   stop() {
-    this.state.isRunning = false
-    this.state.isPaused = false
-
-    if (this.interval) {
-      clearInterval(this.interval)
-      this.interval = null
-    }
+    // Stop Web Worker timer
+    this.timerWorker.stopTimer()
 
     if (this.graceTimeout) {
       clearTimeout(this.graceTimeout)
@@ -154,26 +194,7 @@ export class TimerModel {
     }
   }
 
-  tick() {
-    if (this.state.timeRemaining <= 0) {
-      this.sessionComplete()
-      return
-    }
 
-    this.state.timeRemaining--
-
-    // Track focus time in real-time for work sessions
-    if (this.state.currentSession === 'work') {
-      this.state.totalFocusTime += 1
-    }
-
-    this.emit('timerTick', {
-      timeRemaining: this.state.timeRemaining,
-      totalTime: this.state.totalTime,
-      progress: (this.state.totalTime - this.state.timeRemaining) / this.state.totalTime,
-      totalFocusTime: this.state.totalFocusTime
-    })
-  }
   
   /**
    * Handle session completion
@@ -192,13 +213,39 @@ export class TimerModel {
       completedSessions: this.state.completedSessions,
       totalFocusTime: this.state.totalFocusTime
     })
-    
-    // Start break confirmation process for work sessions
+
+    // Handle break logic for work sessions
     if (this.state.currentSession === 'work') {
-      this.startBreakConfirmation()
+      const nextBreakType = this.getNextBreakType()
+
+      // Show session completion notification
+      this.notificationManager.notifySessionComplete(this.state.currentSession, nextBreakType)
+
+      // Auto-start short breaks, only confirm long breaks
+      if (nextBreakType === 'shortBreak') {
+        this.nextSession()
+
+        // Notify break start
+        this.notificationManager.notifyBreakStart('shortBreak', this.config.shortBreakDuration)
+
+        this.emit('shortBreakStarted', {
+          sessionType: this.state.currentSession,
+          timeRemaining: this.state.timeRemaining
+        })
+      } else {
+        // Long break requires confirmation
+        this.startBreakConfirmation()
+      }
     } else {
+      // Show break completion notification
+      this.notificationManager.notifySessionComplete(this.state.currentSession)
+
       // Auto-start next session for breaks
       this.nextSession()
+
+      // Notify work session start
+      this.notificationManager.notifyWorkStart(this.state.sessionNumber)
+
       this.emit('breakEnded', {
         nextSessionType: this.state.currentSession
       })
@@ -265,11 +312,14 @@ export class TimerModel {
     
     // Move to next session and add bonus time
     this.nextSession()
-    
+
     if (this.breakState.bonusTime > 0) {
       this.state.timeRemaining += this.breakState.bonusTime
       this.state.totalTime += this.breakState.bonusTime
     }
+
+    // Notify long break start
+    this.notificationManager.notifyBreakStart('longBreak', this.config.longBreakDuration)
     
     this.emit('breakConfirmed', {
       sessionType: this.state.currentSession,

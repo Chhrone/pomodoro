@@ -845,3 +845,148 @@
 .development-note strong {
   font-weight: 600;
 }
+
+/* Music Controls Styles */
+.music-controls {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: transparent;
+  z-index: 10;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+}
+
+.music-controls.hidden {
+  display: none;
+}
+
+.music-controls-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.music-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: white;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.music-control-btn:hover {
+  background: #f9fafb;
+  color: #374151;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.music-control-btn:active {
+  transform: scale(0.95);
+}
+
+.music-control-btn.primary {
+  background: var(--primary-color);
+  color: white;
+  width: 48px;
+  height: 48px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.music-control-btn.primary:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.music-volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.volume-slider {
+  width: 80px;
+  height: 4px;
+  border-radius: 2px;
+  background: #e5e7eb;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.volume-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+.volume-display {
+  font-size: var(--font-size-xs);
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 35px;
+  text-align: center;
+}
+
+/* Dark theme adjustments for music controls */
+@media (prefers-color-scheme: dark) {
+  .music-control-btn {
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .music-control-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+    color: var(--text-primary);
+  }
+
+  .music-volume-control {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .volume-slider {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}

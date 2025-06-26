@@ -24,7 +24,7 @@ class PomodoroApp {
     this.init()
   }
 
-  init() {
+  async init() {
     console.log('PomodoroApp: Initializing...')
 
     this.settingsPresenter.init()
@@ -36,7 +36,8 @@ class PomodoroApp {
     this.timerPresenter.setReportPresenter(this.reportPresenter)
 
     this.connectPresenters()
-    this.initializeMusicTracks()
+    await this.initializeMusicTracks()
+    await this.requestNotificationPermission()
 
     console.log('PomodoroApp: Initialization complete!')
     console.log('📝 Note: Task List feature is currently under development and will be available in a future update!')
@@ -50,6 +51,25 @@ class PomodoroApp {
       await this.musicPresenter.loadMusicTracks()
     } catch (error) {
       console.error('Failed to initialize music tracks:', error)
+    }
+  }
+
+  /**
+   * Request notification permission
+   */
+  async requestNotificationPermission() {
+    try {
+      const timerModel = this.timerPresenter.model
+      if (timerModel && timerModel.notificationManager) {
+        const granted = await timerModel.notificationManager.requestPermission()
+        if (granted) {
+          console.log('✅ Notification permission granted')
+        } else {
+          console.log('⚠️ Notification permission denied - notifications will not be shown')
+        }
+      }
+    } catch (error) {
+      console.error('Failed to request notification permission:', error)
     }
   }
 
@@ -68,13 +88,13 @@ class PomodoroApp {
     })
 
     this.timerPresenter.on('timerPause', () => {
-      this.musicPresenter.stopMusic()
+      this.musicPresenter.pauseMusic()
     })
 
     this.timerPresenter.on('timerResume', () => {
       const currentSession = this.timerPresenter.getCurrentSessionType()
       if (currentSession === 'work' && this.musicPresenter.isEnabled()) {
-        this.musicPresenter.startMusic()
+        this.musicPresenter.resumeMusic()
       }
     })
 
@@ -159,7 +179,7 @@ class PomodoroApp {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   document.body.classList.add('loaded')
 
   // Clean up task list artifacts

@@ -11,7 +11,8 @@ export class MusicModel {
       enabled: true,
       volume: 1.0, // 0.0 to 1.0 (100% default)
       currentTrack: null,
-      autoPlay: true
+      autoPlay: true,
+      playbackMode: 'loop' // 'loop' or 'list'
     }
     
     // Music state
@@ -518,7 +519,7 @@ export class MusicModel {
     // Create new Howl instance with format specification
     const howlConfig = {
       src: [currentTrack.url],
-      loop: true,
+      loop: this.config.playbackMode === 'loop',
       volume: this.config.volume,
       html5: true, // Force HTML5 Audio for better file support
       preload: true, // Preload the audio
@@ -556,6 +557,11 @@ export class MusicModel {
         this.state.isPlaying = false
         this.state.isPaused = false
         this.emit('trackEnded')
+
+        // Auto-advance to next track in list mode
+        if (this.config.playbackMode === 'list') {
+          this.nextTrack()
+        }
       },
       onloaderror: (_, error) => {
         this.state.error = `Failed to load audio file: ${currentTrack.name}`
@@ -661,6 +667,101 @@ export class MusicModel {
     }
 
     this.emit('configUpdated', this.config)
+  }
+
+  /**
+   * Set playback mode
+   */
+  setPlaybackMode(mode) {
+    if (mode === 'loop' || mode === 'list') {
+      this.config.playbackMode = mode
+
+      // Update current howl loop setting
+      if (this.howl) {
+        this.howl.loop(mode === 'loop')
+      }
+
+      this.emit('playbackModeChanged', { mode })
+    }
+  }
+
+  /**
+   * Toggle playback mode
+   */
+  togglePlaybackMode() {
+    const newMode = this.config.playbackMode === 'loop' ? 'list' : 'loop'
+    this.setPlaybackMode(newMode)
+    return newMode
+  }
+
+  /**
+   * Go to next track
+   */
+  nextTrack() {
+    if (this.state.tracks.length === 0) return false
+
+    const wasPlaying = this.state.isPlaying
+    const currentIndex = this.state.currentTrackIndex
+    let nextIndex = currentIndex + 1
+
+    // Handle end of list based on playback mode
+    if (nextIndex >= this.state.tracks.length) {
+      if (this.config.playbackMode === 'list') {
+        nextIndex = 0 // Loop back to first track
+      } else {
+        return false // Don't advance in loop mode
+      }
+    }
+
+    this.state.currentTrackIndex = nextIndex
+    this.config.currentTrack = this.state.tracks[nextIndex].id
+
+    this.emit('trackSelected', {
+      track: this.getCurrentTrack(),
+      index: nextIndex
+    })
+
+    // Continue playing if was playing
+    if (wasPlaying) {
+      this.play()
+    }
+
+    return true
+  }
+
+  /**
+   * Go to previous track
+   */
+  previousTrack() {
+    if (this.state.tracks.length === 0) return false
+
+    const wasPlaying = this.state.isPlaying
+    const currentIndex = this.state.currentTrackIndex
+    let prevIndex = currentIndex - 1
+
+    // Handle beginning of list based on playback mode
+    if (prevIndex < 0) {
+      if (this.config.playbackMode === 'list') {
+        prevIndex = this.state.tracks.length - 1 // Loop to last track
+      } else {
+        return false // Don't go back in loop mode
+      }
+    }
+
+    this.state.currentTrackIndex = prevIndex
+    this.config.currentTrack = this.state.tracks[prevIndex].id
+
+    this.emit('trackSelected', {
+      track: this.getCurrentTrack(),
+      index: prevIndex
+    })
+
+    // Continue playing if was playing
+    if (wasPlaying) {
+      this.play()
+    }
+
+    return true
   }
 
   /**
