@@ -1,0 +1,375 @@
+/* Responsive Design */
+
+/* Large screens */
+@media (min-width: 1200px) {
+  .container {
+    max-width: var(--container-xl);
+    padding: var(--spacing-2xl) var(--spacing-2xl);
+  }
+  
+  .timer-minutes,
+  .timer-seconds {
+    font-size: var(--font-size-5xl);
+  }
+
+  .timer-separator {
+    font-size: var(--font-size-4xl);
+  }
+  
+  .progress-ring {
+    width: 400px;
+    height: 400px;
+  }
+  
+  .progress-ring circle {
+    r: 180;
+    cx: 200;
+    cy: 200;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 1024px) {
+  .container {
+    max-width: var(--container-md);
+    padding: var(--spacing-xl);
+  }
+}
+
+/* Settings button fix for 770px to 481px range */
+@media (max-width: 770px) and (min-width: 481px) {
+  .settings-btn,
+  .report-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .settings-btn svg,
+  .report-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Tablet screens */
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    margin: var(--spacing-md);
+  }
+
+  .app-title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .settings-btn,
+  .report-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .settings-btn svg,
+  .report-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .timer-minutes,
+  .timer-seconds {
+    font-size: var(--font-size-4xl);
+  }
+
+  .timer-separator {
+    font-size: var(--font-size-3xl);
+  }
+
+  .progress-ring {
+    width: 280px;
+    height: 280px;
+  }
+
+  .progress-ring circle {
+    r: 130;
+    cx: 140;
+    cy: 140;
+  }
+
+  .timer-controls {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .control-btn {
+    width: 100%;
+    min-width: auto;
+  }
+
+
+
+  .break-controls {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .break-btn {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .break-info {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+  }
+
+  .settings-content {
+    margin: var(--spacing-sm);
+    max-width: none;
+  }
+
+  .settings-actions {
+    flex-direction: column;
+  }
+
+  .settings-btn {
+    width: 100%;
+  }
+}
+
+/* Mobile screens */
+@media (max-width: 480px) {
+  #app {
+    padding: var(--spacing-sm);
+  }
+
+  .container {
+    padding: var(--spacing-lg) var(--spacing-md);
+    margin: 0;
+    border-radius: var(--border-radius);
+    max-width: 350px;
+  }
+
+  .header {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+  }
+
+  .app-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .settings-btn,
+  .report-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .settings-btn svg,
+  .report-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .timer-circle {
+    width: 280px;
+    height: 280px;
+  }
+
+  .timer-ring {
+    width: 280px;
+    height: 280px;
+  }
+
+  .timer-ring-circle {
+    cx: 140;
+    cy: 140;
+    r: 120;
+  }
+
+  .timer-minutes,
+  .timer-seconds {
+    font-size: 2.2rem;
+  }
+
+  .timer-separator {
+    font-size: 1.8rem;
+  }
+
+  .session-type {
+    font-size: var(--font-size-xl);
+  }
+
+  .session-counter {
+    font-size: var(--font-size-base);
+  }
+
+  .session-info {
+    max-width: 280px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .progress-ring circle {
+    r: 110;
+    cx: 120;
+    cy: 120;
+  }
+
+
+
+  .main-content {
+    gap: var(--spacing-lg);
+  }
+
+  .break-title {
+    font-size: var(--font-size-3xl);
+  }
+
+  .break-message {
+    font-size: var(--font-size-lg);
+  }
+
+  .color-picker-group {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .color-option {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 320px) {
+  .container {
+    padding: var(--spacing-md) var(--spacing-sm);
+    max-width: 300px;
+  }
+
+  .settings-btn,
+  .report-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .settings-btn svg,
+  .report-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .timer-circle {
+    width: 240px;
+    height: 240px;
+  }
+
+  .timer-ring {
+    width: 240px;
+    height: 240px;
+  }
+
+  .timer-ring-circle {
+    cx: 120;
+    cy: 120;
+    r: 100;
+  }
+
+  .timer-minutes,
+  .timer-seconds {
+    font-size: 1.8rem;
+  }
+
+  .timer-separator {
+    font-size: 1.4rem;
+  }
+
+  .session-type {
+    font-size: var(--font-size-lg);
+  }
+
+  .session-counter {
+    font-size: var(--font-size-sm);
+  }
+
+  .session-info {
+    max-width: 240px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .control-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .progress-ring {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .container {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .progress-ring {
+    width: 200px;
+    height: 200px;
+  }
+
+  .progress-ring circle {
+    r: 90;
+    cx: 100;
+    cy: 100;
+  }
+
+  .timer-minutes,
+  .timer-seconds {
+    font-size: var(--font-size-2xl);
+  }
+
+  .timer-separator {
+    font-size: var(--font-size-xl);
+  }
+
+  .main-content {
+    gap: var(--spacing-md);
+  }
+}
+
+/* Print styles */
+@media print {
+  .settings-btn,
+  .timer-controls,
+  .break-controls {
+    display: none;
+  }
+
+  .container {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  .progress-ring {
+    filter: none;
+  }
+}
