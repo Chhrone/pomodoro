@@ -5,11 +5,10 @@
 export class SessionReportModel {
   constructor() {
     this.storageKey = 'pomodoro-session-reports'
-    this.currentSessionKey = 'pomodoro-current-session'
-    
+
     // Event listeners
     this.listeners = {}
-    
+
     // Current session data (for tracking ongoing session)
     this.currentSession = null
   }
@@ -44,7 +43,6 @@ export class SessionReportModel {
       focusTime: 0 // actual focus time (for work sessions)
     }
     
-    this.saveCurrentSession()
     console.log('SessionReportModel: Started tracking session:', this.currentSession)
   }
   
@@ -58,8 +56,6 @@ export class SessionReportModel {
     if (this.currentSession.type === 'work') {
       this.currentSession.focusTime = elapsedTime
     }
-    
-    this.saveCurrentSession()
   }
   
   /**
@@ -73,10 +69,10 @@ export class SessionReportModel {
     
     // Save to daily reports
     this.saveSessionToDaily(this.currentSession)
-    
+
     // Clear current session
-    this.clearCurrentSession()
-    
+    this.currentSession = null
+
     console.log('SessionReportModel: Session completed and saved')
     this.emit('sessionSaved', this.currentSession)
   }
@@ -210,41 +206,7 @@ export class SessionReportModel {
     }
   }
   
-  /**
-   * Save current session to localStorage
-   */
-  saveCurrentSession() {
-    try {
-      if (this.currentSession) {
-        localStorage.setItem(this.currentSessionKey, JSON.stringify(this.currentSession))
-      }
-    } catch (error) {
-      console.error('SessionReportModel: Error saving current session:', error)
-    }
-  }
-  
-  /**
-   * Load current session from localStorage
-   */
-  loadCurrentSession() {
-    try {
-      const data = localStorage.getItem(this.currentSessionKey)
-      this.currentSession = data ? JSON.parse(data) : null
-      return this.currentSession
-    } catch (error) {
-      console.error('SessionReportModel: Error loading current session:', error)
-      this.currentSession = null
-      return null
-    }
-  }
-  
-  /**
-   * Clear current session
-   */
-  clearCurrentSession() {
-    this.currentSession = null
-    localStorage.removeItem(this.currentSessionKey)
-  }
+
   
   /**
    * Generate unique session ID
@@ -280,7 +242,7 @@ export class SessionReportModel {
    */
   clearAllReports() {
     localStorage.removeItem(this.storageKey)
-    this.clearCurrentSession()
+    this.currentSession = null
     console.log('SessionReportModel: Cleared all reports')
   }
 }

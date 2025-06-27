@@ -24,7 +24,7 @@ export class ReportPresenter extends EventEmitter {
    * Initialize the presenter
    */
   init() {
-    console.log('ReportPresenter: Initialized')
+    // Initialization complete
   }
   
   /**
@@ -130,6 +130,50 @@ export class ReportPresenter extends EventEmitter {
    */
   cancelSession() {
     this.sessionReportModel.cancelSession()
+  }
+
+  /**
+   * Save incomplete session (when user closes/reloads page)
+   */
+  saveIncompleteSession(sessionData) {
+    try {
+      const reports = this.sessionReportModel.loadDailyReports()
+      const today = this.sessionReportModel.getDateString(new Date())
+
+      if (!reports[today]) {
+        reports[today] = {
+          date: today,
+          sessions: [],
+          totalFocusTime: 0,
+          completedWorkSessions: 0,
+          totalSessions: 0
+        }
+      }
+
+      // Add incomplete session time to daily totals
+      if (sessionData.totalFocusTime > 0) {
+        reports[today].totalFocusTime += sessionData.totalFocusTime
+
+        // Add a session record for the incomplete work
+        reports[today].sessions.push({
+          id: `incomplete-${Date.now()}`,
+          type: 'work',
+          startTime: sessionData.timestamp,
+          endTime: new Date().toISOString(),
+          duration: sessionData.currentSessionElapsed,
+          focusTime: sessionData.totalFocusTime,
+          completed: false,
+          incomplete: true
+        })
+
+        reports[today].totalSessions++
+      }
+
+      this.sessionReportModel.saveDailyReports(reports)
+
+    } catch (error) {
+      console.error('ReportPresenter: Error saving incomplete session:', error)
+    }
   }
 
   /**

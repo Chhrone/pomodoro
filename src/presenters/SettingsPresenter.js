@@ -5,6 +5,7 @@
 import { SettingsModel } from '../models/SettingsModel.js'
 import { SettingsView } from '../views/SettingsView.js'
 import { EventEmitter } from '../utils/EventEmitter.js'
+import { settingsManager } from '../utils/SettingsManager.js'
 
 export class SettingsPresenter extends EventEmitter {
   constructor() {
@@ -87,6 +88,7 @@ export class SettingsPresenter extends EventEmitter {
     // Settings view callbacks
     this.settingsView.setCallbacks({
       onClose: () => this.hideSettings(),
+      onForceClose: () => this.forceHideSettings(),
       onTimerSettingChange: (key, value) => this.handleTimerSettingChange(key, value),
       onAppearanceSettingChange: (key, value) => this.handleAppearanceSettingChange(key, value),
       onBackgroundImageChange: (file) => this.handleBackgroundImageChange(file),
@@ -133,19 +135,31 @@ export class SettingsPresenter extends EventEmitter {
    * Hide settings panel
    */
   hideSettings() {
-    if (!this.isVisible) return
-    
+    // Always try to hide if the view thinks it's visible, regardless of presenter state
+    if (!this.isVisible && !this.settingsView.isVisible()) {
+      return
+    }
+
     this.isVisible = false
     this.settingsView.hide()
-    
     this.emit('settingsHidden')
   }
   
   /**
+   * Force hide settings panel (for emergency situations)
+   */
+  forceHideSettings() {
+    this.isVisible = false
+    this.settingsView.forceHide()
+    this.emit('settingsHidden')
+  }
+
+  /**
    * Toggle settings panel visibility
    */
   toggleSettings() {
-    if (this.isVisible) {
+    // Use view state as source of truth for toggle
+    if (this.settingsView.isVisible()) {
       this.hideSettings()
     } else {
       this.showSettings()
@@ -232,7 +246,7 @@ export class SettingsPresenter extends EventEmitter {
   /**
    * Handle music setting changes (deprecated - now handled by MusicPresenter)
    */
-  handleMusicSettingChange(key, value) {
+  handleMusicSettingChange() {
     // Music settings are now handled by MusicPresenter directly
     // This method is kept for compatibility but does nothing
   }
@@ -353,6 +367,37 @@ export class SettingsPresenter extends EventEmitter {
   getSettingsSummary() {
     return this.model.getSettingsSummary()
   }
+
+  /**
+   * Debug method to check panel state
+   */
+  debugPanelState() {
+    const state = {
+      presenterVisible: this.isVisible,
+      viewVisible: this.settingsView.isVisible(),
+      isAnimating: this.settingsView.getAnimationState(),
+      panelClasses: this.settingsView.elements.panel?.className,
+      panelStyle: this.settingsView.elements.panel?.style.cssText
+    }
+
+    console.log('Settings Panel Debug State:', state)
+    return state
+  }
+
+  /**
+   * Emergency reset method for stuck panel
+   */
+  emergencyReset() {
+    this.isVisible = false
+    this.settingsView.forceHide()
+
+    // Also ensure the panel is properly hidden in DOM
+    if (this.settingsView.elements.panel) {
+      this.settingsView.elements.panel.classList.add('hidden')
+    }
+
+    this.emit('settingsHidden')
+  }
   
   /**
    * Check if settings are customized
@@ -364,7 +409,7 @@ export class SettingsPresenter extends EventEmitter {
   /**
    * Handle external music track updates (deprecated - now handled by MusicPresenter)
    */
-  updateMusicTracks(tracks, currentTrackId) {
+  updateMusicTracks() {
     // Music UI is now handled by MusicPresenter directly
     // This method is kept for compatibility but does nothing
   }
@@ -372,8 +417,43 @@ export class SettingsPresenter extends EventEmitter {
   /**
    * Handle external music state updates (deprecated - now handled by MusicPresenter)
    */
-  updateMusicState(state) {
+  updateMusicState() {
     // Music UI is now handled by MusicPresenter directly
     // This method is kept for compatibility but does nothing
+  }
+
+  /**
+   * Get the settings model instance (for centralized settings manager)
+   */
+  getSettingsModel() {
+    return this.model
+  }
+
+  /**
+   * Validate that settings are properly integrated with centralized manager
+   */
+  validateSettingsIntegration() {
+    try {
+      if (settingsManager.initialized) {
+        const centralSettings = settingsManager.getSettings()
+        const localSettings = this.model.getSettings()
+
+        // Check if settings are in sync
+        const isInSync = JSON.stringify(centralSettings) === JSON.stringify(localSettings)
+
+        if (!isInSync) {
+          console.warn('Settings out of sync between central manager and local model')
+          console.log('Central:', centralSettings)
+          console.log('Local:', localSettings)
+        } else {
+          console.log('Settings properly integrated with centralized manager')
+        }
+
+        return isInSync
+      }
+    } catch (error) {
+      console.warn('Failed to validate settings integration:', error)
+      return false
+    }
   }
 }

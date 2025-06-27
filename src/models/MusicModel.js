@@ -3,6 +3,7 @@
  * Follows MVP pattern - no direct DOM interaction
  */
 import { Howl, Howler } from 'howler'
+import { MusicStorage } from '../utils/MusicStorage.js'
 
 export class MusicModel {
   constructor() {
@@ -32,7 +33,10 @@ export class MusicModel {
     
     // Event listeners
     this.listeners = {}
-    
+
+    // Music storage for user files
+    this.musicStorage = new MusicStorage()
+
     // Initialize Howler global settings
     this.initializeHowler()
   }
@@ -108,8 +112,8 @@ export class MusicModel {
       // Load default tracks from manifest
       const defaultTracks = await this.loadDefaultTracks()
 
-      // Load user tracks from localStorage
-      const userTracks = this.loadUserTracks()
+      // Load user tracks from storage (now async)
+      const userTracks = await this.loadUserTracks()
 
       // Combine all tracks
       this.state.tracks = [...defaultTracks, ...userTracks]
@@ -185,17 +189,41 @@ export class MusicModel {
   }
 
   /**
-   * Load user tracks from localStorage
+   * Load user tracks from storage (IndexedDB + localStorage metadata)
    */
-  loadUserTracks() {
+  async loadUserTracks() {
     try {
+      // First try to load from IndexedDB if available
+      if (MusicStorage.isSupported()) {
+        await this.musicStorage.init()
+        const storedFiles = await this.musicStorage.getAllFiles()
+
+        if (storedFiles.length > 0) {
+          console.log(`Loaded ${storedFiles.length} user tracks from IndexedDB`)
+          return storedFiles.map(file => ({
+            id: file.id,
+            name: file.metadata.name,
+            url: file.data, // base64 data from IndexedDB
+            size: file.metadata.size,
+            format: file.metadata.format,
+            isDefault: false,
+            addedDate: file.metadata.addedDate
+          }))
+        }
+      }
+
+      // Fallback to localStorage metadata (without file data)
       const stored = localStorage.getItem('pomodoro_user_music')
       if (!stored) return []
 
       const userTracks = JSON.parse(stored)
+      console.log(`Loaded ${userTracks.length} user track metadata from localStorage`)
+
+      // Return tracks without URLs (they'll need to be re-uploaded)
       return userTracks.map(track => ({
         ...track,
-        isDefault: false
+        isDefault: false,
+        needsReupload: !track.url // Flag tracks that need re-upload
       }))
     } catch (error) {
       console.warn('Failed to load user tracks from storage:', error)
@@ -204,14 +232,44 @@ export class MusicModel {
   }
 
   /**
-   * Save user tracks to localStorage
+   * Save user tracks to localStorage (metadata only, not file data)
    */
   saveUserTracks() {
     try {
       const userTracks = this.state.tracks.filter(track => !track.isDefault)
-      localStorage.setItem('pomodoro_user_music', JSON.stringify(userTracks))
+
+      // Only save metadata, not the actual file data to avoid quota issues
+      const trackMetadata = userTracks.map(track => ({
+        id: track.id,
+        name: track.name,
+        size: track.size,
+        format: track.format,
+        isDefault: false,
+        addedDate: track.addedDate,
+        // Don't save the URL (base64 data) to localStorage
+        hasFile: true
+      }))
+
+      localStorage.setItem('pomodoro_user_music', JSON.stringify(trackMetadata))
+      console.log(`Saved metadata for ${trackMetadata.length} user tracks to localStorage`)
     } catch (error) {
       console.error('Failed to save user tracks:', error)
+
+      // If still failing, try to save just the essential data
+      try {
+        const userTracks = this.state.tracks.filter(track => !track.isDefault)
+        const essentialData = userTracks.map(track => ({
+          id: track.id,
+          name: track.name,
+          isDefault: false
+        }))
+        localStorage.setItem('pomodoro_user_music', JSON.stringify(essentialData))
+        console.log('Saved essential track data as fallback')
+      } catch (fallbackError) {
+        console.error('Failed to save even essential track data:', fallbackError)
+        // Clear the storage to prevent corruption
+        localStorage.removeItem('pomodoro_user_music')
+      }
     }
   }
 
@@ -220,24 +278,54 @@ export class MusicModel {
    */
   async loadMusicFiles(files) {
     const newTracks = []
+    let useIndexedDB = MusicStorage.isSupported()
+
+    // Initialize storage if using IndexedDB
+    if (useIndexedDB) {
+      try {
+        await this.musicStorage.init()
+      } catch (error) {
+        console.warn('Failed to initialize IndexedDB, falling back to localStorage:', error)
+        useIndexedDB = false
+      }
+    }
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       if (file.type.startsWith('audio/')) {
         try {
-          // Convert file to base64 for storage
+          const trackId = `user_track_${Date.now()}_${i}`
           const base64Data = await this.fileToBase64(file)
 
-          const track = {
-            id: `user_track_${Date.now()}_${i}`,
+          const metadata = {
             name: this.extractTrackName(file.name),
-            url: base64Data,
             size: file.size,
-            duration: null,
             format: this.getAudioFormat(file.name, file.type),
-            isDefault: false,
             addedDate: new Date().toISOString()
           }
+
+          const track = {
+            id: trackId,
+            name: metadata.name,
+            url: base64Data,
+            size: metadata.size,
+            duration: null,
+            format: metadata.format,
+            isDefault: false,
+            addedDate: metadata.addedDate
+          }
+
+          // Store in IndexedDB if available
+          if (useIndexedDB) {
+            try {
+              await this.musicStorage.storeFile(trackId, base64Data, metadata)
+              console.log(`Stored ${file.name} in IndexedDB`)
+            } catch (error) {
+              console.warn(`Failed to store ${file.name} in IndexedDB:`, error)
+              // Continue with the track anyway, it will be in memory
+            }
+          }
+
           newTracks.push(track)
         } catch (error) {
           console.error('Failed to process file:', file.name, error)
@@ -248,7 +336,7 @@ export class MusicModel {
     // Add new tracks to existing tracks
     this.state.tracks = [...this.state.tracks, ...newTracks]
 
-    // Save user tracks to localStorage
+    // Save user tracks metadata to localStorage (not the file data)
     this.saveUserTracks()
 
     // Set first track as current if none selected

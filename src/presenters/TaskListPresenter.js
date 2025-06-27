@@ -14,8 +14,6 @@ export class TaskListPresenter extends EventEmitter {
     
     this.setupViewCallbacks()
     this.updateUI()
-    
-    console.log('TaskListPresenter: Initialized')
   }
   
   /**
@@ -43,7 +41,6 @@ export class TaskListPresenter extends EventEmitter {
       const task = this.model.createTask(name, category)
       this.updateUI()
       this.emit('taskAdded', task)
-      console.log('TaskListPresenter: Task added:', task)
     } catch (error) {
       console.error('TaskListPresenter: Error adding task:', error)
       this.emit('error', error.message)
@@ -58,7 +55,6 @@ export class TaskListPresenter extends EventEmitter {
       const task = this.model.startTask(id)
       this.updateUI()
       this.emit('taskStarted', task)
-      console.log('TaskListPresenter: Task started:', task)
     } catch (error) {
       console.error('TaskListPresenter: Error starting task:', error)
       this.emit('error', error.message)
@@ -73,7 +69,6 @@ export class TaskListPresenter extends EventEmitter {
       const task = this.model.completeTask(id)
       this.updateUI()
       this.emit('taskCompleted', task)
-      console.log('TaskListPresenter: Task completed:', task)
     } catch (error) {
       console.error('TaskListPresenter: Error completing task:', error)
       this.emit('error', error.message)
@@ -88,7 +83,6 @@ export class TaskListPresenter extends EventEmitter {
       const task = this.model.cancelTask(id)
       this.updateUI()
       this.emit('taskCancelled', task)
-      console.log('TaskListPresenter: Task cancelled:', task)
     } catch (error) {
       console.error('TaskListPresenter: Error cancelling task:', error)
       this.emit('error', error.message)
@@ -120,7 +114,6 @@ export class TaskListPresenter extends EventEmitter {
         const task = this.model.deleteTask(id)
         this.updateUI()
         this.emit('taskDeleted', task)
-        console.log('TaskListPresenter: Task deleted:', task)
       }
     } catch (error) {
       console.error('TaskListPresenter: Error deleting task:', error)
@@ -183,8 +176,6 @@ export class TaskListPresenter extends EventEmitter {
 
       this.model.reorderTasks(taskIds, status)
       // No need to update UI since the view already shows the new order
-
-      console.log('TaskListPresenter: Tasks reordered in section:', section)
     } catch (error) {
       console.error('TaskListPresenter: Error reordering tasks:', error)
       this.emit('error', error.message)

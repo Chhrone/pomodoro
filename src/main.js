@@ -3,6 +3,8 @@ import { TimerPresenter } from './presenters/TimerPresenter.js'
 import { MusicPresenter } from './presenters/MusicPresenter.js'
 import { SettingsPresenter } from './presenters/SettingsPresenter.js'
 import { ReportPresenter } from './presenters/ReportPresenter.js'
+import { settingsManager } from './utils/SettingsManager.js'
+import { SettingsTest } from './utils/SettingsTest.js'
 // TODO: Task List feature
 // import { TaskListPresenter } from './presenters/TaskListPresenter.js'
 // import { TaskModel } from './models/TaskModel.js'
@@ -25,11 +27,10 @@ class PomodoroApp {
   }
 
   async init() {
-    console.log('PomodoroApp: Initializing...')
+    // Initialize centralized settings manager first
+    settingsManager.init(this.settingsPresenter.model)
 
-    // Set default light theme
-    document.body.setAttribute('data-theme', 'light')
-
+    // Initialize settings first to load saved theme
     this.settingsPresenter.init()
     this.reportPresenter.init()
     this.timerPresenter.init()
@@ -42,8 +43,7 @@ class PomodoroApp {
     await this.initializeMusicTracks()
     await this.requestNotificationPermission()
 
-    console.log('PomodoroApp: Initialization complete!')
-    console.log('📝 Note: Task List feature is currently under development and will be available in a future update!')
+    console.log('Application initialized with centralized settings')
   }
 
   /**
@@ -152,8 +152,35 @@ class PomodoroApp {
       }
     })
 
+    // Save incomplete sessions before page unload
+    window.addEventListener('beforeunload', (e) => {
+      this.saveIncompleteSession()
+    })
+
+    // Also save on page hide (for mobile browsers)
+    document.addEventListener('pagehide', (e) => {
+      this.saveIncompleteSession()
+    })
+
     // TODO: Task list toggle
     // this.setupTaskListToggle()
+
+    // Expose debug methods globally for troubleshooting
+    window.debugSettings = () => this.settingsPresenter.debugPanelState()
+    window.fixSettings = () => this.settingsPresenter.emergencyReset()
+
+    // Expose settings testing utilities in development
+    window.testSettings = () => SettingsTest.runTests()
+    window.settingsManager = settingsManager
+    window.SettingsTest = SettingsTest
+
+    // Run settings validation in development
+    if (process.env.NODE_ENV === 'development') {
+      setTimeout(() => {
+        console.log('🔧 Development mode: Running settings validation...')
+        this.settingsPresenter.validateSettingsIntegration()
+      }, 1000)
+    }
   }
 
   // TODO: Task list setup
@@ -180,6 +207,40 @@ class PomodoroApp {
       stats: this.timerPresenter.getStats()
     }
   }
+
+  /**
+   * Save session data when user closes/reloads page during active session
+   */
+  saveIncompleteSession() {
+    try {
+      const timerState = this.timerPresenter.getCurrentState()
+
+      // Save focus time and completed sessions data if timer is running
+      if (timerState.isRunning && timerState.currentSession === 'work') {
+        const currentSessionElapsed = timerState.totalTime - timerState.timeRemaining
+
+        // Only save if there's meaningful progress (at least 1 minute)
+        if (currentSessionElapsed >= 60) {
+          const sessionData = {
+            sessionNumber: timerState.sessionNumber,
+            completedSessions: timerState.completedSessions,
+            totalFocusTime: timerState.totalFocusTime + currentSessionElapsed,
+            currentSessionElapsed: currentSessionElapsed,
+            timestamp: new Date().toISOString()
+          }
+
+          // Save to daily reports to preserve focus time data
+          if (this.reportPresenter) {
+            this.reportPresenter.saveIncompleteSession(sessionData)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('PomodoroApp: Error saving session data:', error)
+    }
+  }
+
+
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

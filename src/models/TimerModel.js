@@ -1,15 +1,20 @@
 // Timer state management and session tracking
 import { TimerWorkerManager } from '../utils/TimerWorkerManager.js'
 import { NotificationManager } from '../utils/NotificationManager.js'
+import { settingsManager } from '../utils/SettingsManager.js'
 
 export class TimerModel {
   constructor() {
+    // Initialize with default config (will be updated from settings)
     this.config = {
       workDuration: 25,
       shortBreakDuration: 5,
       longBreakDuration: 15,
       sessionsUntilLongBreak: 3
     }
+
+    // Load config from settings when available
+    this.initializeFromSettings()
 
     this.state = {
       currentSession: 'work',
@@ -85,6 +90,46 @@ export class TimerModel {
     })
   }
 
+  /**
+   * Initialize timer config from centralized settings
+   */
+  initializeFromSettings() {
+    try {
+      // Wait for settings manager to be initialized
+      if (settingsManager.initialized) {
+        this.loadConfigFromSettings()
+      } else {
+        // Listen for settings initialization
+        setTimeout(() => this.initializeFromSettings(), 100)
+      }
+    } catch (error) {
+      console.warn('Settings manager not ready, using default timer config:', error)
+    }
+  }
+
+  /**
+   * Load timer configuration from settings
+   */
+  loadConfigFromSettings() {
+    try {
+      const timerSettings = settingsManager.getTimerSettings()
+
+      this.config = {
+        workDuration: timerSettings.workDuration || 25,
+        shortBreakDuration: timerSettings.shortBreakDuration || 5,
+        longBreakDuration: timerSettings.longBreakDuration || 15,
+        sessionsUntilLongBreak: timerSettings.sessionsUntilLongBreak || 3
+      }
+
+      // Reset current session with new config
+      this.resetCurrentSession()
+
+      console.log('Timer config loaded from settings:', this.config)
+    } catch (error) {
+      console.warn('Failed to load timer config from settings:', error)
+    }
+  }
+
   // Event system
   on(event, callback) {
     if (!this.listeners[event]) {
@@ -127,6 +172,18 @@ export class TimerModel {
 
     // Start Web Worker timer
     this.timerWorker.startTimer(Math.ceil(this.state.timeRemaining))
+
+    // Show session start notification
+    if (this.state.currentSession === 'work') {
+      this.notificationManager.notifyWorkStart(this.state.sessionNumber)
+    } else {
+      // For break sessions, show break start notification
+      const breakType = this.state.currentSession === 'shortBreak' ? 'shortBreak' : 'longBreak'
+      const duration = this.state.currentSession === 'shortBreak'
+        ? this.config.shortBreakDuration
+        : this.config.longBreakDuration
+      this.notificationManager.notifyBreakStart(breakType, duration)
+    }
 
     this.emit('timerStarted', {
       sessionType: this.state.currentSession,

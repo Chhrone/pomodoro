@@ -6,6 +6,7 @@ import { MusicModel } from '../models/MusicModel.js'
 import { MusicPlayerView } from '../views/MusicPlayerView.js'
 import { MusicControlsView } from '../views/MusicControlsView.js'
 import { EventEmitter } from '../utils/EventEmitter.js'
+import { settingsManager } from '../utils/SettingsManager.js'
 
 export class MusicPresenter extends EventEmitter {
   constructor() {
@@ -16,16 +17,56 @@ export class MusicPresenter extends EventEmitter {
 
     // Setup model event listeners
     this.setupModelListeners()
-    
+
     // Setup view callbacks
     this.setupViewCallbacks()
     this.setupControlsViewCallbacks()
-    
+
     // Initialize UI from model state
     this.initializeUI()
 
     // Load music tracks
     this.loadMusicTracks()
+
+    // Initialize with settings from centralized manager
+    this.initializeFromSettings()
+  }
+
+  /**
+   * Initialize music settings from centralized settings manager
+   */
+  initializeFromSettings() {
+    try {
+      // Wait for settings manager to be initialized
+      if (settingsManager.initialized) {
+        this.syncWithSettings()
+      } else {
+        // Listen for settings initialization
+        setTimeout(() => this.initializeFromSettings(), 100)
+      }
+    } catch (error) {
+      console.warn('Settings manager not ready, using model defaults:', error)
+    }
+  }
+
+  /**
+   * Sync music model with centralized settings
+   */
+  syncWithSettings() {
+    try {
+      const musicSettings = settingsManager.getMusicSettings()
+
+      // Update model config with settings
+      this.model.updateConfig({
+        enabled: musicSettings.enabled,
+        volume: musicSettings.volume / 100, // Convert percentage to 0-1 range
+        playbackMode: musicSettings.playbackMode || 'loop'
+      })
+
+      console.log('Music presenter synced with centralized settings:', musicSettings)
+    } catch (error) {
+      console.warn('Failed to sync with settings:', error)
+    }
   }
   
   /**
@@ -62,31 +103,24 @@ export class MusicPresenter extends EventEmitter {
       this.view.setLoadingState(true)
     })
     
-    this.model.on('metadataLoaded', (data) => {
+    this.model.on('metadataLoaded', () => {
       this.view.setLoadingState(false)
     })
     
     this.model.on('playStarted', () => {
-      // Music started playing
       this.controlsView.updatePlayPauseState(true)
-      console.log('Music playback started')
     })
 
     this.model.on('playPaused', () => {
-      // Music paused
       this.controlsView.updatePlayPauseState(false)
-      console.log('Music playback paused')
     })
 
     this.model.on('playStopped', () => {
-      // Music stopped
       this.controlsView.updatePlayPauseState(false)
-      console.log('Music playback stopped')
     })
 
     this.model.on('trackEnded', () => {
       // Track ended (shouldn't happen with loop enabled)
-      console.log('Music track ended')
     })
 
     this.model.on('playbackModeChanged', (data) => {
@@ -114,24 +148,46 @@ export class MusicPresenter extends EventEmitter {
   setupViewCallbacks() {
     this.view.setCallbacks({
       onMusicEnabledChange: (enabled) => {
+        // Update model
         this.model.updateConfig({ enabled })
-        
+
+        // Save to centralized settings
+        try {
+          settingsManager.updateSetting('music', 'enabled', enabled)
+        } catch (error) {
+          console.warn('Failed to save music enabled setting:', error)
+        }
+
         if (!enabled && this.model.getState().isPlaying) {
           this.model.stop()
         }
       },
-      
+
       onVolumeChange: (volumePercent) => {
         const volume = volumePercent / 100 // Convert to 0.0-1.0 range
         this.model.setVolume(volume)
+
+        // Save to centralized settings
+        try {
+          settingsManager.updateSetting('music', 'volume', volumePercent)
+        } catch (error) {
+          console.warn('Failed to save music volume setting:', error)
+        }
       },
-      
+
       onTrackSelect: (trackId) => {
         if (trackId) {
           this.model.selectTrack(trackId)
+
+          // Save current track to settings
+          try {
+            settingsManager.updateSetting('music', 'currentTrack', trackId)
+          } catch (error) {
+            console.warn('Failed to save current track setting:', error)
+          }
         }
       },
-      
+
       onFilesSelected: (files) => {
         this.handleFilesSelected(files)
       },
@@ -178,10 +234,24 @@ export class MusicPresenter extends EventEmitter {
       onModeToggle: () => {
         const newMode = this.togglePlaybackMode()
         this.view.showSuccess(`Playback mode: ${newMode === 'loop' ? 'Loop Track' : 'Play List'}`)
+
+        // Save playback mode to settings
+        try {
+          settingsManager.updateSetting('music', 'playbackMode', newMode)
+        } catch (error) {
+          console.warn('Failed to save playback mode setting:', error)
+        }
       },
 
       onVolumeChange: (volumePercent) => {
         this.setVolume(volumePercent)
+
+        // Save volume to settings
+        try {
+          settingsManager.updateSetting('music', 'volume', volumePercent)
+        } catch (error) {
+          console.warn('Failed to save volume setting:', error)
+        }
       }
     })
   }

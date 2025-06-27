@@ -158,15 +158,35 @@ export class SettingsView {
       })
     }
     
-    // Keyboard shortcuts
+    // Keyboard shortcuts with double-escape failsafe
+    let escapeCount = 0
+    let escapeTimeout = null
+
     document.addEventListener('keydown', (e) => {
       // Only handle shortcuts when settings panel is visible
       if (!this.isVisible()) return
 
       if (e.code === 'Escape') {
         e.preventDefault()
-        console.log('Settings panel closing: Escape key pressed')
-        this.callbacks.onClose?.()
+        escapeCount++
+
+        console.log(`Settings panel: Escape key pressed (${escapeCount})`)
+
+        if (escapeCount === 1) {
+          // First escape - normal close
+          this.callbacks.onClose?.()
+
+          // Reset counter after 1 second
+          escapeTimeout = setTimeout(() => {
+            escapeCount = 0
+          }, 1000)
+        } else if (escapeCount >= 2) {
+          // Double escape - force close
+          console.log('Settings panel: Double escape detected, force closing')
+          clearTimeout(escapeTimeout)
+          escapeCount = 0
+          this.callbacks.onForceClose?.()
+        }
       }
     })
     
@@ -176,8 +196,10 @@ export class SettingsView {
         // Only close if mousedown directly on the panel overlay (not on any child elements)
         if (e.target === this.elements.panel) {
           this.clickStartedOnOverlay = true
+          console.log('Settings panel: Click started on overlay')
         } else {
           this.clickStartedOnOverlay = false
+          console.log('Settings panel: Click started on content')
         }
       })
 
@@ -188,6 +210,14 @@ export class SettingsView {
           this.callbacks.onClose?.()
         }
         this.clickStartedOnOverlay = false
+      })
+
+      // Additional click handler as backup
+      this.elements.panel.addEventListener('click', (e) => {
+        if (e.target === this.elements.panel) {
+          console.log('Settings panel: Backup click handler triggered')
+          this.callbacks.onClose?.()
+        }
       })
     }
   }
@@ -207,42 +237,57 @@ export class SettingsView {
 
     this.isAnimating = true
 
-    // Show panel
+    // Show panel by removing hidden class (CSS handles the animation)
     this.elements.panel.classList.remove('hidden')
 
-    // Add entrance animation with slide-in from right
-    requestAnimationFrame(() => {
-      this.elements.panel.classList.add('show')
+    // Wait for animation to complete
+    setTimeout(() => {
+      this.isAnimating = false
+    }, 300)
 
-      setTimeout(() => {
-        this.isAnimating = false
-      }, 200)
-    })
-
-    // Focus on first input
+    // Focus on first input after animation
     setTimeout(() => {
       const firstInput = this.elements.panel.querySelector('input, select')
       if (firstInput) {
         firstInput.focus()
       }
-    }, 250)
+    }, 350)
   }
   
   /**
    * Hide settings panel
    */
   hide() {
-    if (!this.elements.panel || this.isAnimating) return
+    if (!this.elements.panel) return
+
+    // If already animating, force complete the animation
+    if (this.isAnimating) {
+      this.forceHide()
+      return
+    }
 
     this.isAnimating = true
 
-    // Add exit animation with slide-out to right
-    this.elements.panel.classList.remove('show')
+    // Hide panel by adding hidden class (CSS handles the animation)
+    this.elements.panel.classList.add('hidden')
 
+    // Wait for animation to complete
     setTimeout(() => {
-      this.elements.panel.classList.add('hidden')
       this.isAnimating = false
-    }, 200)
+    }, 300)
+  }
+
+  /**
+   * Force hide settings panel without animation
+   */
+  forceHide() {
+    if (!this.elements.panel) return
+
+    // Clear any pending timeouts and reset state
+    this.isAnimating = false
+
+    // Immediately hide without animation
+    this.elements.panel.classList.add('hidden')
   }
   
   /**
@@ -250,6 +295,13 @@ export class SettingsView {
    */
   isVisible() {
     return this.elements.panel && !this.elements.panel.classList.contains('hidden')
+  }
+
+  /**
+   * Get animation state (for debugging)
+   */
+  getAnimationState() {
+    return this.isAnimating
   }
   
   /**
@@ -426,6 +478,15 @@ export class SettingsView {
    * Get current form values
    */
   getFormValues() {
+    // Get selected theme
+    let selectedTheme = 'light'
+    if (this.elements.themeMode) {
+      const checkedTheme = Array.from(this.elements.themeMode).find(radio => radio.checked)
+      if (checkedTheme) {
+        selectedTheme = checkedTheme.value
+      }
+    }
+
     return {
       timer: {
         workDuration: parseInt(this.elements.workDuration?.value) || 25,
@@ -433,6 +494,7 @@ export class SettingsView {
         longBreakDuration: parseInt(this.elements.longBreakDuration?.value) || 15
       },
       appearance: {
+        theme: selectedTheme,
         backgroundType: this.elements.backgroundType?.value || 'gradient',
         backgroundColor: this.elements.backgroundColor?.value || '#667eea',
         gradientColor1: this.elements.gradientColor1?.value || '#667eea',

@@ -20,7 +20,6 @@ export class TimerPresenter extends EventEmitter {
   }
 
   init() {
-    console.log('TimerPresenter: Initializing...')
     this.updateUI()
 
     // Set initial progress ring state
@@ -32,7 +31,6 @@ export class TimerPresenter extends EventEmitter {
     }
 
     this.timerView.show()
-    console.log('TimerPresenter: Initialized and timer view shown')
   }
 
   setSettingsPresenter(settingsPresenter) {
@@ -140,6 +138,9 @@ export class TimerPresenter extends EventEmitter {
     
     this.model.on('sessionSkipped', (data) => {
       this.updateUI()
+
+      // Reset button to 'Start' state
+      this.timerView.updateStartPauseButton(false, false)
 
       // Cancel session tracking when skipped
       if (this.reportPresenter) {
@@ -308,6 +309,16 @@ export class TimerPresenter extends EventEmitter {
    */
   handleSkip() {
     const state = this.model.getState()
+
+    // Stop music if playing
+    if (this.musicPresenter && this.musicPresenter.isPlaying()) {
+      this.musicPresenter.stopMusic()
+    }
+
+    // Hide now playing
+    if (this.musicPresenter) {
+      this.musicPresenter.hideNowPlaying()
+    }
 
     // Animate fast completion before skipping
     this.timerView.animateSkipCompletion(state.currentSession)

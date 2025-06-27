@@ -1,6 +1,7 @@
 // Application settings and preferences management
 export class SettingsModel {
   constructor() {
+    // Define default settings structure
     this.defaultSettings = {
       timer: {
         workDuration: 25,
@@ -11,18 +12,19 @@ export class SettingsModel {
 
       music: {
         enabled: true,
-        volume: 50,
+        volume: 100, // Changed to 100% as per user preference
         currentTrack: null,
-        autoPlay: true
+        autoPlay: true,
+        playbackMode: 'loop' // 'loop' or 'list'
       },
 
       appearance: {
-        backgroundType: 'default',
+        backgroundType: 'gradient', // Changed from 'default' to 'gradient'
         backgroundColor: '#667eea',
         gradientColor1: '#667eea',
         gradientColor2: '#764ba2',
         backgroundImage: null,
-        theme: 'light'
+        theme: 'light' // Default to light mode as per user preference
       },
 
       notifications: {
@@ -34,21 +36,35 @@ export class SettingsModel {
       advanced: {
         gracePeriodsEnabled: true,
         bonusTimeEnabled: true,
-        autoStartBreaks: false,
+        autoStartBreaks: true, // Auto-start short breaks as per user preference
         autoStartWork: false
       }
     }
-    
-    // Current settings (loaded from localStorage or defaults)
-    this.settings = this.loadSettings()
-    
-    // Event listeners
-    this.listeners = {}
-    
+
     // Storage key for localStorage
     this.storageKey = 'pomodoro-settings'
+
+    // Current settings (loaded from localStorage or defaults)
+    this.settings = this.loadSettings()
+
+    // Event listeners
+    this.listeners = {}
+
+    // Initialize settings on first load
+    this.initializeSettings()
   }
-  
+
+  /**
+   * Initialize settings on first load
+   */
+  initializeSettings() {
+    // Apply appearance settings immediately
+    this.applyAppearanceSettings()
+
+    // Emit initial settings loaded event
+    this.emit('settingsLoaded', this.getSettings())
+  }
+
   // Event system
   on(event, callback) {
     if (!this.listeners[event]) {
@@ -170,15 +186,57 @@ export class SettingsModel {
       const stored = localStorage.getItem(this.storageKey)
       if (stored) {
         const parsed = JSON.parse(stored)
-        // Merge with defaults to ensure all properties exist
-        return this.deepMerge(this.defaultSettings, parsed)
+        // Merge with defaults to ensure all properties exist and handle new settings
+        const merged = this.deepMerge(this.defaultSettings, parsed)
+
+        // Validate loaded settings
+        this.validateLoadedSettings(merged)
+
+        console.log('Settings loaded from localStorage:', merged)
+        return merged
       }
     } catch (error) {
       console.warn('Failed to load settings from localStorage:', error)
+      // Clear corrupted data
+      this.clearSettings()
     }
-    
+
     // Return defaults if loading failed
+    console.log('Using default settings')
     return JSON.parse(JSON.stringify(this.defaultSettings))
+  }
+
+  /**
+   * Validate loaded settings and fix any issues
+   */
+  validateLoadedSettings(settings) {
+    // Ensure all required categories exist
+    Object.keys(this.defaultSettings).forEach(category => {
+      if (!settings[category]) {
+        settings[category] = JSON.parse(JSON.stringify(this.defaultSettings[category]))
+      }
+    })
+
+    // Ensure all required properties exist within categories
+    Object.keys(this.defaultSettings).forEach(category => {
+      Object.keys(this.defaultSettings[category]).forEach(key => {
+        if (settings[category][key] === undefined) {
+          settings[category][key] = this.defaultSettings[category][key]
+        }
+      })
+    })
+  }
+
+  /**
+   * Clear settings from localStorage
+   */
+  clearSettings() {
+    try {
+      localStorage.removeItem(this.storageKey)
+      console.log('Settings cleared from localStorage')
+    } catch (error) {
+      console.warn('Failed to clear settings from localStorage:', error)
+    }
   }
   
   /**
@@ -321,6 +379,86 @@ export class SettingsModel {
   
   getAdvancedSettings() {
     return this.getCategory('advanced')
+  }
+
+  /**
+   * Convenience methods for common settings access
+   */
+
+  // Timer settings shortcuts
+  getWorkDuration() {
+    return this.getSetting('timer', 'workDuration')
+  }
+
+  getShortBreakDuration() {
+    return this.getSetting('timer', 'shortBreakDuration')
+  }
+
+  getLongBreakDuration() {
+    return this.getSetting('timer', 'longBreakDuration')
+  }
+
+  getSessionsUntilLongBreak() {
+    return this.getSetting('timer', 'sessionsUntilLongBreak')
+  }
+
+  // Music settings shortcuts
+  isMusicEnabled() {
+    return this.getSetting('music', 'enabled')
+  }
+
+  getMusicVolume() {
+    return this.getSetting('music', 'volume')
+  }
+
+  getCurrentTrack() {
+    return this.getSetting('music', 'currentTrack')
+  }
+
+  getPlaybackMode() {
+    return this.getSetting('music', 'playbackMode')
+  }
+
+  // Appearance settings shortcuts
+  getTheme() {
+    return this.getSetting('appearance', 'theme')
+  }
+
+  getBackgroundType() {
+    return this.getSetting('appearance', 'backgroundType')
+  }
+
+  getBackgroundColor() {
+    return this.getSetting('appearance', 'backgroundColor')
+  }
+
+  getGradientColors() {
+    return {
+      color1: this.getSetting('appearance', 'gradientColor1'),
+      color2: this.getSetting('appearance', 'gradientColor2')
+    }
+  }
+
+  // Notification settings shortcuts
+  areNotificationsEnabled() {
+    return this.getSetting('notifications', 'enabled')
+  }
+
+  isSoundEnabled() {
+    return this.getSetting('notifications', 'sound')
+  }
+
+  areDesktopNotificationsEnabled() {
+    return this.getSetting('notifications', 'desktop')
+  }
+
+  // Advanced settings shortcuts
+  areAutoStartBreaksEnabled() {
+    return this.getSetting('advanced', 'autoStartBreaks')
+  }
+
+  isAutoStartWorkEnabled() {
+    return this.getSetting('advanced', 'autoStartWork')
   }
   
   /**

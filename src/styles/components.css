@@ -39,11 +39,12 @@
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--bg-primary);
   backdrop-filter: blur(10px);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
+  opacity: 0.95;
 }
 
 .now-playing-content {
@@ -876,20 +877,20 @@
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: white;
-  color: #6b7280;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
 }
 
 .music-control-btn:hover {
-  background: #f9fafb;
-  color: #374151;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .music-control-btn:active {
@@ -913,18 +914,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: white;
+  background: var(--bg-primary);
   padding: 8px 12px;
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
 }
 
 .volume-slider {
   width: 80px;
   height: 4px;
   border-radius: 2px;
-  background: #e5e7eb;
+  background: var(--border-color);
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
@@ -962,35 +963,10 @@
 
 .volume-display {
   font-size: var(--font-size-xs);
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 500;
   min-width: 35px;
   text-align: center;
 }
 
-/* Dark theme adjustments for music controls */
-@media (prefers-color-scheme: dark) {
-  .music-control-btn {
-    background: #1f2937;
-    color: #9ca3af;
-    border: 1px solid #374151;
-  }
 
-  .music-control-btn:hover {
-    background: #374151;
-    color: #d1d5db;
-  }
-
-  .music-volume-control {
-    background: #1f2937;
-    border: 1px solid #374151;
-  }
-
-  .volume-slider {
-    background: #374151;
-  }
-
-  .volume-display {
-    color: #9ca3af;
-  }
-}

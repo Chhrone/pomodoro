@@ -2,77 +2,94 @@
 
 A modern, feature-rich Pomodoro Timer application built with vanilla JavaScript following the MVP (Model-View-Presenter) architecture pattern. This application helps you boost productivity using the proven Pomodoro Technique with customizable settings, background music, and beautiful visual design.
 
+🌐 **Live Demo**: [pomodoro.rayin.my.id](https://pomodoro.rayin.my.id)
+*Hosted on Vercel with DNS managed by Cloudflare*
+
 ## ✨ Features
 
 ### 🎯 Core Timer Functionality
 - **Pomodoro Technique Implementation**: 25-minute focus sessions with 5-minute short breaks and 15-minute long breaks
 - **Customizable Timer Settings**: Adjust work session, short break, and long break durations
-- **Visual Progress Ring**: Circular progress indicator with different directions for focus (CCW) and break (CW) sessions
-- **Session Tracking**: Track completed sessions and total focus time
-- **Smart Break System**: Automatic break suggestions with bonus time for delayed breaks
+- **Visual Progress Ring**: Circular progress indicator with smooth animations and rounded borders
+- **Session Tracking**: Track completed sessions and total focus time with daily reports
+- **Smart Break System**: Auto-start short breaks with grace period for delayed breaks
+- **Web Workers**: Background timer processing for consistent performance when tab is inactive
 
 ### 🎵 Music Integration
 - **Background Music Support**: Play ambient music during focus sessions using Howler.js
 - **Multiple Audio Formats**: Support for MP3, WAV, OGG, and other web audio formats
+- **Music Controls**: Play/pause, previous/next track, loop/list mode toggle
 - **Volume Control**: Adjustable volume with real-time slider
 - **Now Playing Display**: Scrolling text showing current track with smooth animations
 - **Auto-pause**: Music automatically stops during breaks and pauses
+- **Custom Music Upload**: Add your own music files for personalized focus sessions
 
 ### 🎨 Customizable Appearance
-- **Multiple Background Types**: Choose from gradient, solid color, or custom image backgrounds
-- **Color Customization**: Dual color picker for gradient backgrounds
+- **Multiple Background Types**: Choose from default, gradient, solid color, or custom image backgrounds
+- **Color Customization**: Dual color picker for gradient backgrounds with primary/secondary color system
+- **Dark/Light Mode**: Toggle between light and dark themes
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 - **Modern UI**: Clean, minimalist interface with smooth animations and transitions
+- **Settings Panel**: Slide-in settings panel with organized sections
+
+### 📊 Session Reports
+- **Daily Statistics**: Track focus time and completed sessions by date
+- **Weekly Charts**: Visual representation of productivity patterns
+- **Session History**: Detailed breakdown of work sessions and break times
+- **Progress Tracking**: Monitor productivity trends over time
 
 ### ⚙️ Advanced Settings
-- **Persistent Settings**: All preferences saved to localStorage
-- **Grace Period System**: 10-second grace period before break confirmation
-- **Bonus Time Tracking**: Earn extra break time for delayed break starts
-- **Keyboard Shortcuts**: ESC to close settings, space for start/pause (planned)
+- **Centralized Settings System**: All preferences managed through unified settings model
+- **Persistent Storage**: Settings automatically saved to localStorage with validation
+- **Settings Import/Export**: Backup and restore your preferences
+- **Auto-save**: Appearance settings save immediately, timer settings require manual save
+- **Keyboard Shortcuts**: ESC to close settings, space for start/pause
 - **Click Outside Protection**: Smart click detection prevents accidental settings panel closure
 
-### 🔧 Developer Features
-- **MVP Architecture**: Clean separation of concerns with Model-View-Presenter pattern
-- **Event-Driven Design**: Loose coupling between components using custom event system
-- **Modular Structure**: Well-organized codebase with separate modules for each feature
-- **Console Debugging**: Comprehensive logging for troubleshooting
-- **No Framework Dependencies**: Pure vanilla JavaScript for maximum performance
+## 🛠️ Tech Stack
 
-## 🛠️ Technologies Used
+### Frontend Technologies
+- **HTML5**: Semantic markup with modern web standards and accessibility features
+- **CSS3**: Advanced styling with CSS Grid, Flexbox, custom properties, and smooth animations
+- **Vanilla JavaScript (ES6+)**: Modern JavaScript with modules, classes, async/await, and Web Workers
+- **CSS Custom Properties**: Dynamic theming and color management system
+- **Web APIs**: localStorage, Web Workers, Notification API, and File API
 
-### Frontend
-- **HTML5**: Semantic markup with modern web standards
-- **CSS3**: Advanced styling with CSS Grid, Flexbox, custom properties, and animations
-- **Vanilla JavaScript (ES6+)**: Modern JavaScript features including modules, classes, and async/await
-- **CSS Custom Properties**: Dynamic theming and color management
-- **Web APIs**: localStorage for persistence, Web Audio API integration
-
-### Audio
+### Audio System
 - **Howler.js**: Professional audio library for cross-browser audio support
-- **Web Audio API**: Native browser audio capabilities
-- **Multiple Format Support**: MP3, WAV, OGG, AAC, and more
+- **Web Audio API**: Native browser audio capabilities for enhanced performance
+- **Multiple Format Support**: MP3, WAV, OGG, AAC, FLAC, and more audio formats
+- **Audio Storage**: Client-side music file management with localStorage integration
 
-### Architecture
-- **MVP Pattern**: Model-View-Presenter for clean code organization
-- **Event-Driven Architecture**: Custom event emitter for component communication
+### Architecture & Patterns
+- **MVP Pattern**: Model-View-Presenter architecture for clean separation of concerns
+- **Event-Driven Architecture**: Custom event emitter system for loose component coupling
+- **Centralized Settings Management**: Unified settings model with automatic persistence
 - **Module System**: ES6 modules for code organization and reusability
-- **Observer Pattern**: Reactive updates between components
+- **Observer Pattern**: Reactive updates and state synchronization between components
 
-### Development Tools
-- **Vite**: Fast build tool and development server
-- **Modern Browser Support**: Chrome, Firefox, Safari, Edge
+### Development & Build Tools
+- **Vite**: Lightning-fast build tool and development server with HMR
+- **ES6 Modules**: Native module system for optimal performance
+- **Modern Browser APIs**: Leveraging latest web standards for enhanced functionality
 - **Mobile-First Design**: Responsive layout with progressive enhancement
-- **Hot Module Replacement**: Instant updates during development
+
+### Hosting & Infrastructure
+- **Vercel**: Serverless deployment platform for optimal performance and global CDN
+- **Cloudflare**: DNS management and additional performance optimization
+- **Custom Domain**: Professional domain setup with SSL/TLS encryption
 
 ## 🚀 Getting Started
+
+Visit [pomodoro.rayin.my.id](https://pomodoro.rayin.my.id) to start using the timer immediately!
 
 ### Quick Start Guide
 
 1. **First Launch**: The timer starts with default settings (25min work, 5min short break, 15min long break)
 2. **Start Timer**: Click the "Start" button to begin your first focus session
 3. **Customize Settings**: Click the gear icon to adjust timer durations, background, and music
-4. **Add Music**: In settings, load your own audio files or use the default ambient track
-5. **Track Progress**: Monitor completed sessions and total focus time in the stats section
+4. **Add Music**: In settings, load your own audio files for personalized focus sessions
+5. **Track Progress**: Monitor completed sessions and total focus time in the daily reports
 
 ## 📖 How to Use
 
@@ -117,30 +134,41 @@ pomodoro/
 ├── index.html              # Main HTML file
 ├── src/
 │   ├── models/             # Data layer (MVP Model)
-│   │   ├── TimerModel.js   # Timer logic and state
-│   │   ├── SettingsModel.js # Settings management
-│   │   └── MusicModel.js   # Audio playback logic
+│   │   ├── TimerModel.js   # Timer logic and state management
+│   │   ├── SettingsModel.js # Centralized settings management
+│   │   ├── MusicModel.js   # Audio playback and music logic
+│   │   └── ReportModel.js  # Session tracking and statistics
 │   ├── views/              # UI layer (MVP View)
 │   │   ├── TimerView.js    # Timer display and controls
 │   │   ├── SettingsView.js # Settings panel UI
 │   │   ├── MusicPlayerView.js # Music controls UI
-│   │   └── BreakConfirmationView.js # Break confirmation UI
+│   │   ├── MusicControlsView.js # Music playback controls
+│   │   ├── BreakConfirmationView.js # Break confirmation UI
+│   │   └── ReportView.js   # Statistics and reports UI
 │   ├── presenters/         # Logic layer (MVP Presenter)
-│   │   ├── TimerPresenter.js # Timer coordination
+│   │   ├── TimerPresenter.js # Timer coordination and logic
 │   │   ├── SettingsPresenter.js # Settings coordination
-│   │   └── MusicPresenter.js # Music coordination
-│   ├── utils/              # Utility functions
-│   │   └── EventEmitter.js # Custom event system
+│   │   ├── MusicPresenter.js # Music coordination
+│   │   └── ReportPresenter.js # Reports coordination
+│   ├── utils/              # Utility functions and helpers
+│   │   ├── EventEmitter.js # Custom event system
+│   │   ├── SettingsManager.js # Centralized settings access
+│   │   ├── TimerWorkerManager.js # Web Workers for background timing
+│   │   ├── NotificationManager.js # Browser notifications
+│   │   └── MusicStorage.js # Music file storage management
 │   ├── styles/             # CSS stylesheets
-│   │   ├── variables.css   # CSS custom properties
+│   │   ├── variables.css   # CSS custom properties and themes
 │   │   ├── base.css        # Base styles and reset
 │   │   ├── components.css  # Component styles
 │   │   ├── settings.css    # Settings panel styles
-│   │   ├── break-confirmation.css # Break confirmation styles
+│   │   ├── music.css       # Music player styles
+│   │   ├── reports.css     # Reports and statistics styles
 │   │   └── responsive.css  # Mobile responsiveness
 │   ├── assets/             # Static assets
 │   │   └── music/          # Default music files
-│   └── app.js              # Application entry point
+│   └── main.js             # Application entry point
+├── docs/                   # Documentation
+│   └── SETTINGS_SYSTEM.md  # Settings system documentation
 └── README.md               # This file
 ```
 
@@ -171,72 +199,69 @@ pomodoro/
    - Long Break: 1-120 minutes
 3. Click "Save Timer Settings" to apply
 
-## 🔧 Development
+## 🏛️ Architecture
 
-### Architecture Overview
-The application follows the MVP (Model-View-Presenter) pattern:
+### MVP Pattern Implementation
+The application follows the MVP (Model-View-Presenter) pattern for clean code organization:
 
-- **Models**: Handle data, business logic, and state management
-- **Views**: Manage DOM manipulation and user interface
-- **Presenters**: Coordinate between models and views, handle user interactions
+- **Models**: Handle data, business logic, state management, and persistence
+- **Views**: Manage DOM manipulation, user interface, and user interactions
+- **Presenters**: Coordinate between models and views, handle application logic
 
 ### Key Design Patterns
 - **Observer Pattern**: Event-driven communication between components
-- **Module Pattern**: ES6 modules for code organization
+- **Singleton Pattern**: Centralized settings management
+- **Module Pattern**: ES6 modules for code organization and encapsulation
 - **Strategy Pattern**: Different behaviors for work/break sessions
 - **State Pattern**: Timer state management (running, paused, stopped)
 
-### Adding New Features
-1. Create model for data/logic in `src/models/`
-2. Create view for UI in `src/views/`
-3. Create presenter to coordinate in `src/presenters/`
-4. Add styles in appropriate CSS file
-5. Import and initialize in `src/app.js`
+### Core Features Architecture
+- **Centralized Settings**: Unified settings model with automatic localStorage persistence
+- **Web Workers**: Background timer processing for consistent performance
+- **Event-Driven Updates**: Reactive UI updates based on state changes
+- **Modular Audio System**: Flexible music management with multiple format support
+- **Responsive Design**: Mobile-first approach with progressive enhancement
 
-### Debug Mode
-Open browser Developer Tools (F12) and check the Console tab for detailed logging information about:
-- Settings panel open/close events
-- Timer state changes
-- Music playback status
-- Error messages and warnings
+## 📱 Browser Compatibility
 
-## 📱 Browser Support
+### Desktop Browsers
+- **Chrome**: 80+ (recommended for best performance)
+- **Firefox**: 75+ (full feature support)
+- **Safari**: 13+ (macOS compatibility)
+- **Edge**: 80+ (Windows integration)
 
-- **Chrome**: 80+ (recommended)
-- **Firefox**: 75+
-- **Safari**: 13+
-- **Edge**: 80+
-- **Mobile Safari**: iOS 13+
-- **Chrome Mobile**: Android 8+
+### Mobile Browsers
+- **Mobile Safari**: iOS 13+ (iPhone/iPad support)
+- **Chrome Mobile**: Android 8+ (Android compatibility)
+- **Samsung Internet**: Latest versions
+- **Firefox Mobile**: Latest versions
 
-## 🤝 Contributing
+### Required Features
+- ES6 Modules support
+- Web Workers API
+- localStorage API
+- File API (for music uploads)
+- CSS Custom Properties
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 🌟 Key Features Summary
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+✅ **Pomodoro Timer** - Customizable work/break intervals
+✅ **Background Music** - Upload and play your own tracks
+✅ **Visual Progress** - Smooth circular progress indicators
+✅ **Session Tracking** - Daily and weekly productivity reports
+✅ **Dark/Light Mode** - Automatic theme switching
+✅ **Responsive Design** - Works on all devices
+✅ **Offline Capable** - Functions without internet connection
+✅ **Settings Persistence** - Your preferences are always saved
 
 ## 🙏 Acknowledgments
 
 - **Pomodoro Technique**: Created by Francesco Cirillo
-- **Howler.js**: Audio library by James Simpson
-- **Design Inspiration**: Modern productivity applications
-- **Icons**: Custom SVG icons
-- **Default Music**: Ambient soundscapes for focus
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-1. Check the troubleshooting section above
-2. Open an issue on GitHub
-3. Check browser console for error messages
-4. Ensure you're using a supported browser version
+- **Howler.js**: Professional audio library by James Simpson
+- **Vite**: Fast build tool for modern web development
+- **Vercel**: Hosting platform for seamless deployment
+- **Cloudflare**: DNS management and performance optimization
 
 ---
 
-**Happy focusing! 🍅✨**
+**🍅 Start your productive journey at [pomodoro.rayin.my.id](https://pomodoro.rayin.my.id) ✨**
